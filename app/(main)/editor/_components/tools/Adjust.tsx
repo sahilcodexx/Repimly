@@ -211,7 +211,7 @@ const AdjustControl = () => {
   if (!canvasEditor) {
     return (
       <div className="p-4">
-        <p className="text-sm text-white/70">
+        <p className="text-sm text-muted-foreground">
           Load an image to start adjusting
         </p>
       </div>
@@ -219,24 +219,24 @@ const AdjustControl = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium">Image Adjustments</h3>
+        <h3 className="text-sm font-medium text-foreground">Image Adjustments</h3>
         <Button
           variant="ghost"
           size="sm"
           onClick={resetFilters}
-          className="transition-colors duration-200 hover:bg-neutral-200/50"
+          className="h-7 gap-1 text-xs text-muted-foreground"
         >
-          <RotateCcw className="mr-1 h-4 w-4" />
+          <RotateCcw className="h-3.5 w-3.5" />
           Reset
         </Button>
       </div>
       {FILTER_CONFIGS.map((config) => (
         <div key={config.key} className="space-y-2">
           <div className="flex items-center justify-between">
-            <label className="text-sm">{config.label}</label>
-            <span>
+            <label className="text-xs text-muted-foreground">{config.label}</label>
+            <span className="text-xs tabular-nums text-muted-foreground">
               {filterValues[config.key]}
               {config.suffix || ""}
             </span>
@@ -252,15 +252,15 @@ const AdjustControl = () => {
         </div>
       ))}
       {isApplying && (
-        <div className="flex items-center justify-center py-2">
-          <div className="h-4 w-4 animate-spin rounded-full border-b-2"></div>
-          <span className="ml-2 text-xs">Applying filters...</span>
+        <div className="flex items-center justify-center gap-2 py-2 text-xs text-muted-foreground">
+          <div className="h-3 w-3 animate-spin rounded-full border border-foreground/30 border-t-foreground/80" />
+          Applying filters...
         </div>
       )}
-      <div className="mt-6 rounded-lg border-transparent bg-neutral-200/50 p-3 text-center ring-1 ring-neutral-300/60 dark:bg-neutral-700/50 dark:ring-neutral-600/80">
-        <p className="text-xs">
+      <div className="rounded-lg border border-border bg-muted/50 p-3 text-center">
+        <p className="text-xs text-muted-foreground">
           Adjustments are applied in real-time. Use the{" "}
-          <span className="text-red-400"> Reset button </span> to restore
+          <span className="text-primary"> Reset button </span> to restore
           original values.
         </p>
       </div>

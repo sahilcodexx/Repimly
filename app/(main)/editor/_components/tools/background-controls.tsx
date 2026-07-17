@@ -11,7 +11,6 @@ import {
   Search,
   Download,
   Loader2,
-  Check,
 } from "lucide-react";
 import { HexColorPicker } from "react-colorful";
 import { useCanvas } from "@/context/context";
@@ -19,7 +18,6 @@ import fabric, { FabricImage } from "fabric";
 import { Project } from "@/utils/types";
 import { toast } from "sonner";
 
-// Unsplash API configuration
 const UNSPLASH_ACCESS_KEY = process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY;
 const UNSPLASH_API_URL = "https://api.unsplash.com";
 
@@ -31,14 +29,12 @@ export function BackgroundControls({ project }: { project: Project }) {
   const [isSearching, setIsSearching] = useState(false);
   const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
 
-  // Get the main image object from canvas
   const getMainImage = () => {
     if (!canvasEditor) return null;
     const objects = canvasEditor.getObjects();
     return objects.find((obj: fabric.Object) => obj.type === "image") || null;
   };
 
-  // Background removal using ImageKit
   const handleBackgroundRemoval = async () => {
     const mainImage = getMainImage();
     if (!mainImage || !project) return;
@@ -48,28 +44,23 @@ export function BackgroundControls({ project }: { project: Project }) {
     );
 
     try {
-      // Get the current image URL
       const currentImageUrl =
         project.currentImageUrl || project.originalImageUrl;
 
-      // Handle case where no image URL is available
       if (!currentImageUrl) {
         setProcessingMessage(null);
         alert("No image found to remove background from");
         return;
       }
 
-      // Create ImageKit transformation URL for background removal
       const bgRemovedUrl = currentImageUrl.includes("ik.imagekit.io")
         ? `${currentImageUrl.split("?")[0]}?tr=e-bgremove`
         : currentImageUrl;
 
-      // Create new image with background removed
       const processedImage = await FabricImage.fromURL(bgRemovedUrl, {
         crossOrigin: "anonymous",
       });
 
-      // Store the current properties before removing the old image
       const currentProps = {
         left: mainImage.left,
         top: mainImage.top,
@@ -80,20 +71,16 @@ export function BackgroundControls({ project }: { project: Project }) {
         originY: mainImage.originY,
       };
 
-      // Remove the old image and add the new one
       canvasEditor.remove(mainImage);
       processedImage.set(currentProps);
       canvasEditor.add(processedImage);
 
-      // IMPORTANT: Update coordinates after replacing the image
       processedImage.setCoords();
 
-      // Set as active object and recalculate canvas offset
       canvasEditor.setActiveObject(processedImage);
       canvasEditor.calcOffset();
       canvasEditor.requestRenderAll();
 
-      console.log("Background removed successfully");
       toast.success("Background removed successfully");
     } catch (error) {
       console.error("Error removing background:", error);
@@ -104,27 +91,22 @@ export function BackgroundControls({ project }: { project: Project }) {
     }
   };
 
-  // Set canvas background color
   const handleColorBackground = () => {
     if (!canvasEditor) return;
 
-    // In Fabric.js 6.7, set property directly and render
     canvasEditor.backgroundImage = null;
     canvasEditor.backgroundColor = backgroundColor;
     canvasEditor.requestRenderAll();
   };
 
-  // Remove canvas background (both color and image)
   const handleRemoveBackground = () => {
     if (!canvasEditor) return;
 
-    // Clear both background color and image
     canvasEditor.backgroundColor = null;
     canvasEditor.backgroundImage = null;
     canvasEditor.requestRenderAll();
   };
 
-  // Search Unsplash images
   const searchUnsplashImages = async () => {
     if (!searchQuery.trim() || !UNSPLASH_ACCESS_KEY) return;
 
@@ -151,35 +133,29 @@ export function BackgroundControls({ project }: { project: Project }) {
     }
   };
 
-  // Set image as canvas background
   const handleImageBackground = async (imageUrl: string, imageId: string) => {
     if (!canvasEditor) return;
 
     setSelectedImageId(imageId);
     try {
-      // Download and trigger Unsplash download endpoint (required by Unsplash API)
       if (UNSPLASH_ACCESS_KEY) {
         fetch(`${UNSPLASH_API_URL}/photos/${imageId}/download`, {
           headers: {
             Authorization: `Client-ID ${UNSPLASH_ACCESS_KEY}`,
           },
-        }).catch(() => {}); // Silent fail for download tracking
+        }).catch(() => {});
       }
 
-      // Create fabric image from URL
       const fabricImage: fabric.Image = await FabricImage.fromURL(imageUrl, {
         crossOrigin: "anonymous",
       });
 
-      // USE PROJECT DIMENSIONS instead of canvas dimensions for proper scaling
-      const canvasWidth: number = project.width; // Logical canvas width
-      const canvasHeight: number = project.height; // Logical canvas height
+      const canvasWidth: number = project.width;
+      const canvasHeight: number = project.height;
 
-      // Calculate scales
       const scaleX: number = canvasWidth / fabricImage.width;
       const scaleY: number = canvasHeight / fabricImage.height;
 
-      // Use Math.max to FILL the entire canvas (ensures no empty space)
       const scale: number = Math.max(scaleX, scaleY);
 
       fabricImage.set({
@@ -187,21 +163,13 @@ export function BackgroundControls({ project }: { project: Project }) {
         scaleY: scale,
         originX: "center",
         originY: "center",
-        left: canvasWidth / 2, // Use project dimensions
-        top: canvasHeight / 2, // Use project dimensions
+        left: canvasWidth / 2,
+        top: canvasHeight / 2,
       });
 
-      // Set background and render
       canvasEditor.backgroundImage = fabricImage;
       canvasEditor.requestRenderAll();
       setSelectedImageId(null);
-
-      console.log("Background set:", {
-        imageSize: `${fabricImage.width}x${fabricImage.height}`,
-        canvasSize: `${canvasWidth}x${canvasHeight}`,
-        scale: scale,
-        finalSize: `${fabricImage.width * scale}x${fabricImage.height * scale}`,
-      });
     } catch (error) {
       console.error("Error setting background image:", error);
       alert("Failed to set background image. Please try again.");
@@ -209,7 +177,6 @@ export function BackgroundControls({ project }: { project: Project }) {
     }
   };
 
-  // Handle search on Enter key
   const handleSearchKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       searchUnsplashImages();
@@ -219,18 +186,17 @@ export function BackgroundControls({ project }: { project: Project }) {
   if (!canvasEditor) {
     return (
       <div className="p-4">
-        <p className="text-sm opacity-75">Canvas not ready</p>
+        <p className="text-sm text-muted-foreground">Canvas not ready</p>
       </div>
     );
   }
 
   return (
-    <div className="relative h-full space-y-6">
-      {/* AI Background Removal Button - Outside of tabs */}
-      <div className="space-y-4 border-b border-black/30 pb-4 dark:border-white/10">
+    <div className="relative h-full space-y-5">
+      <div className="space-y-3 border-b border-border pb-4">
         <div>
-          <h3 className="mb-2 text-sm font-medium">AI Background Removal</h3>
-          <p className="mb-4 text-xs opacity-75">
+          <h3 className="mb-1 text-sm font-medium text-foreground">AI Background Removal</h3>
+          <p className="text-xs text-muted-foreground">
             Automatically remove the background from your image using AI
           </p>
         </div>
@@ -246,36 +212,28 @@ export function BackgroundControls({ project }: { project: Project }) {
         </Button>
 
         {!getMainImage() && (
-          <p className="text-xs text-amber-400">
+          <p className="text-xs text-destructive">
             Please add an image to the canvas first to remove its background
           </p>
         )}
       </div>
 
-      {/* Shadcn UI Tabs */}
       <Tabs defaultValue="color" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 border-transparent bg-neutral-300/50 ring-1 inset-shadow-xs ring-black/20 inset-shadow-neutral-400/70 dark:bg-neutral-700/50 dark:ring-neutral-600/80">
-          <TabsTrigger
-            value="color"
-            className="data-[state=active]:bg-primary dark:data-[state=active]:bg-primary/80 data-[state=active]:text-white dark:data-[state=active]:text-black"
-          >
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="color">
             <Palette className="mr-2 h-4 w-4" />
             Color
           </TabsTrigger>
-          <TabsTrigger
-            value="image"
-            className="data-[state=active]:bg-primary dark:data-[state=active]:bg-primary/80 data-[state=active]:text-white dark:data-[state=active]:text-black"
-          >
+          <TabsTrigger value="image">
             <ImageIcon className="mr-2 h-4 w-4" />
             Image
           </TabsTrigger>
         </TabsList>
 
-        {/* Color Background Tab */}
-        <TabsContent value="color" className="mt-6 space-y-4">
+        <TabsContent value="color" className="mt-4 space-y-4">
           <div>
-            <h3 className="mb-2 text-sm font-medium">Solid Color Background</h3>
-            <p className="mb-4 text-xs opacity-70">
+            <h3 className="mb-1 text-sm font-medium text-foreground">Solid Color Background</h3>
+            <p className="text-xs text-muted-foreground">
               Choose a solid color for your canvas background
             </p>
           </div>
@@ -292,10 +250,10 @@ export function BackgroundControls({ project }: { project: Project }) {
                 value={backgroundColor}
                 onChange={(e) => setBackgroundColor(e.target.value)}
                 placeholder="#ffffff"
-                className="flex-1 border-white/20 bg-neutral-200/50 ring-1 ring-black/20 dark:bg-neutral-700/50 dark:ring-neutral-600/80"
+                className="flex-1"
               />
               <div
-                className="h-10 w-10 rounded border border-black/20 dark:border-white/20"
+                className="h-10 w-10 shrink-0 rounded-md border border-border"
                 style={{ backgroundColor }}
               />
             </div>
@@ -311,23 +269,21 @@ export function BackgroundControls({ project }: { project: Project }) {
           </div>
         </TabsContent>
 
-        {/* Image Background Tab */}
-        <TabsContent value="image" className="mt-6 space-y-4">
+        <TabsContent value="image" className="mt-4 space-y-4">
           <div>
-            <h3 className="mb-2 text-sm font-medium">Image Background</h3>
-            <p className="mb-4 text-xs opacity-70">
+            <h3 className="mb-1 text-sm font-medium text-foreground">Image Background</h3>
+            <p className="text-xs text-muted-foreground">
               Search and use high-quality images from Unsplash
             </p>
           </div>
 
-          {/* Search Bar */}
           <div className="flex gap-2">
             <Input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyPress={handleSearchKeyPress}
               placeholder="Search for backgrounds..."
-              className="flex-1 border-white/20 bg-neutral-300/50  ring-1 inset-shadow-xs ring-black/20 inset-shadow-neutral-400/70 dark:bg-neutral-700/50 dark:ring-neutral-600/80"
+              className="flex-1"
             />
             <Button
               onClick={searchUnsplashImages}
@@ -342,17 +298,16 @@ export function BackgroundControls({ project }: { project: Project }) {
             </Button>
           </div>
 
-          {/* Search Results */}
           {unsplashImages && unsplashImages.length > 0 && (
             <div className="space-y-3">
-              <h4 className="text-sm font-medium ">
+              <h4 className="text-sm font-medium text-foreground">
                 Search Results ({unsplashImages?.length})
               </h4>
               <div className="grid max-h-96 grid-cols-2 gap-3 overflow-y-auto">
                 {unsplashImages.map((image) => (
                   <div
                     key={image.id}
-                    className="group relative cursor-pointer overflow-hidden rounded-lg border border-white/10 transition-colors hover:border-neutral-400"
+                    className="group relative cursor-pointer overflow-hidden rounded-lg border border-border transition-colors hover:border-foreground/30"
                     onClick={() =>
                       handleImageBackground(image.urls.regular, image.id)
                     }
@@ -363,21 +318,18 @@ export function BackgroundControls({ project }: { project: Project }) {
                       className="h-24 w-full object-cover"
                     />
 
-                    {/* Loading overlay */}
                     {selectedImageId === image.id && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-                        <Loader2 className="h-5 w-5 animate-spin " />
+                      <div className="absolute inset-0 flex items-center justify-center bg-background/60">
+                        <Loader2 className="h-5 w-5 animate-spin text-foreground" />
                       </div>
                     )}
 
-                    {/* Hover overlay */}
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-colors group-hover:bg-black/30 group-hover:opacity-100">
-                      <Download className="h-5 w-5 " />
+                    <div className="absolute inset-0 flex items-center justify-center bg-background/0 opacity-0 transition-colors group-hover:bg-background/30 group-hover:opacity-100">
+                      <Download className="h-5 w-5 text-foreground" />
                     </div>
 
-                    {/* Attribution */}
-                    <div className="absolute right-0 bottom-0 left-0 bg-black/70 p-1">
-                      <p className="truncate text-xs opacity-80">
+                    <div className="absolute right-0 bottom-0 left-0 bg-gradient-to-t from-background/80 to-transparent p-2 pt-4">
+                      <p className="truncate text-xs text-muted-foreground">
                         by {image.user.name}
                       </p>
                     </div>
@@ -387,34 +339,31 @@ export function BackgroundControls({ project }: { project: Project }) {
             </div>
           )}
 
-          {/* Empty state */}
           {!isSearching && unsplashImages?.length === 0 && searchQuery && (
             <div className="py-8 text-center">
-              <ImageIcon className="mx-auto mb-3 h-12 w-12 text-black/30 invert" />
-              <p className="text-sm opacity-70">
+              <ImageIcon className="mx-auto mb-3 h-12 w-12 text-muted-foreground/50" />
+              <p className="text-sm text-muted-foreground">
                 No images found for "{searchQuery}"
               </p>
-              <p className="text-xs opacity-50">
+              <p className="text-xs text-muted-foreground/60">
                 Try a different search term
               </p>
             </div>
           )}
 
-          {/* Initial state */}
           {!searchQuery && unsplashImages?.length === 0 && (
             <div className="py-8 text-center">
-              <Search className="mx-auto mb-3 h-12 w-12 text-black/30 dark:text-white/30" />
-              <p className="text-sm dark:opacity-70">
+              <Search className="mx-auto mb-3 h-12 w-12 text-muted-foreground/50" />
+              <p className="text-sm text-muted-foreground">
                 Search for background images
               </p>
-              <p className="text-xs opacity-60">Powered by Unsplash</p>
+              <p className="text-xs text-muted-foreground/60">Powered by Unsplash</p>
             </div>
           )}
 
-          {/* API key warning */}
           {!UNSPLASH_ACCESS_KEY && (
-            <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 p-3">
-              <p className="text-xs text-amber-400">
+            <div className="rounded-lg border border-destructive/20 bg-destructive/10 p-3">
+              <p className="text-xs text-destructive">
                 Unsplash API key not configured. Please add
                 NEXT_PUBLIC_UNSPLASH_ACCESS_KEY to your environment variables.
               </p>
@@ -423,8 +372,7 @@ export function BackgroundControls({ project }: { project: Project }) {
         </TabsContent>
       </Tabs>
 
-      {/* Clear Canvas Background Button - At the bottom */}
-      <div className="bottom-0 w-full border-t border-black/30 ark:border-white/10 pt-4">
+      <div className="w-full border-t border-border pt-4">
         <Button
           onClick={handleRemoveBackground}
           className="w-full"

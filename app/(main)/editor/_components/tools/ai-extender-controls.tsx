@@ -74,7 +74,6 @@ export function AIExtenderControls({ project }: { project: Project }) {
   const buildExtensionUrl = (imageUrl: string) => {
     if (!imageUrl || !selectedDirection) return imageUrl;
 
-    // Always use the base URL without existing transformations to avoid duplicates
     const baseUrl = imageUrl.split("?")[0];
     const { width, height } = calculateDimensions();
 
@@ -85,7 +84,6 @@ export function AIExtenderControls({ project }: { project: Project }) {
       "cm-pad_resize",
     ];
 
-    // Add focus positioning
     const focus = FOCUS_MAP[selectedDirection];
     if (focus) transformations.push(focus);
 
@@ -93,7 +91,6 @@ export function AIExtenderControls({ project }: { project: Project }) {
   };
 
   const selectDirection = (direction: Direction) => {
-    // Toggle selection - if same direction is clicked, deselect it
     setSelectedDirection((prev) => (prev === direction ? null : direction));
   };
 
@@ -111,7 +108,6 @@ export function AIExtenderControls({ project }: { project: Project }) {
         crossOrigin: "anonymous",
       });
 
-      // Scale to fit canvas
       const scale = Math.min(
         project.width / (extendedImage.width || 1),
         project.height / (extendedImage.height || 1),
@@ -129,7 +125,6 @@ export function AIExtenderControls({ project }: { project: Project }) {
         evented: true,
       });
 
-      // Replace image
       if (mainImage) {
         canvasEditor.remove(mainImage);
       }
@@ -137,7 +132,6 @@ export function AIExtenderControls({ project }: { project: Project }) {
       canvasEditor.setActiveObject(extendedImage);
       canvasEditor.requestRenderAll();
 
-      // Save to database
       await updateProject({
         projectId: project._id,
         currentImageUrl: extendedUrl,
@@ -153,25 +147,24 @@ export function AIExtenderControls({ project }: { project: Project }) {
     }
   };
 
-  // Early returns for error states
   if (!canvasEditor) {
-    return <div className="p-4 text-sm text-white/70">Canvas not ready</div>;
+    return <div className="p-4 text-sm text-muted-foreground">Canvas not ready</div>;
   }
 
   const mainImage = getMainImage();
   if (!mainImage) {
     return (
-      <div className="p-4 text-sm text-white/70">Please add an image first</div>
+      <div className="p-4 text-sm text-muted-foreground">Please add an image first</div>
     );
   }
 
   if (hasBackgroundRemoval()) {
     return (
-      <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 p-4">
-        <h3 className="mb-2 font-medium text-amber-400">
+      <div className="rounded-lg border border-destructive/20 bg-destructive/10 p-4">
+        <h3 className="mb-2 font-medium text-destructive">
           Extension Not Available
         </h3>
-        <p className="text-sm text-amber-300/80">
+        <p className="text-sm text-destructive/80">
           AI Extension cannot be used on images with removed backgrounds. Use
           extension first, then remove background.
         </p>
@@ -183,11 +176,10 @@ export function AIExtenderControls({ project }: { project: Project }) {
   const currentImage = getMainImage();
 
   return (
-    <div className="space-y-6">
-      {/* Direction Selection */}
+    <div className="space-y-5">
       <div>
-        <h3 className="mb-3 text-sm font-medium">Select Extension Direction</h3>
-        <p className="mb-3 text-xs opacity-70">
+        <h3 className="mb-1 text-sm font-medium text-foreground">Select Extension Direction</h3>
+        <p className="mb-3 text-xs text-muted-foreground">
           Choose one direction to extend your image
         </p>
         <div className="grid grid-cols-2 gap-3">
@@ -196,11 +188,7 @@ export function AIExtenderControls({ project }: { project: Project }) {
               key={key}
               onClick={() => selectDirection(key)}
               variant={selectedDirection === key ? "default" : "outline"}
-              className={`flex items-center gap-2 ${
-                selectedDirection === key
-                  ? "bg-primary hover:bg-primary/80"
-                  : ""
-              }`}
+              className="gap-2"
             >
               <Icon className="h-4 w-4" />
               {label}
@@ -209,11 +197,10 @@ export function AIExtenderControls({ project }: { project: Project }) {
         </div>
       </div>
 
-      {/* Extension Amount */}
       <div>
         <div className="mb-2 flex items-center justify-between">
-          <label className="text-sm">Extension Amount</label>
-          <span className="text-xs opacity-70">{extensionAmount}px</span>
+          <label className="text-sm text-foreground">Extension Amount</label>
+          <span className="text-xs tabular-nums text-muted-foreground">{extensionAmount}px</span>
         </div>
         <Slider
           value={[extensionAmount]}
@@ -226,13 +213,12 @@ export function AIExtenderControls({ project }: { project: Project }) {
         />
       </div>
 
-      {/* Dimensions Preview */}
       {selectedDirection && currentImage && (
-        <div className="rounded-lg bg-neutral-200/50 p-3 ring-1 ring-neutral-400/60 dark:bg-neutral-700/50 dark:ring-neutral-600/80">
-          <h4 className="mb-2 text-sm font-medium ">
+        <div className="rounded-lg border border-border bg-muted/50 p-3">
+          <h4 className="mb-2 text-sm font-medium text-foreground">
             Extension Preview
           </h4>
-          <div className="space-y-1 text-xs opacity-70">
+          <div className="space-y-1 text-xs text-muted-foreground">
             <div>
               Current:{" "}
               {Math.round(
@@ -244,13 +230,13 @@ export function AIExtenderControls({ project }: { project: Project }) {
               )}
               px
             </div>
-            <div className="opacity-70">
+            <div>
               Extended: {newWidth} × {newHeight}px
             </div>
-            <div className="opacity-80">
+            <div>
               Canvas: {project.width} × {project.height}px (unchanged)
             </div>
-            <div className="opacity-70">
+            <div>
               Direction:{" "}
               {DIRECTIONS.find((d) => d.key === selectedDirection)?.label}
             </div>
@@ -258,7 +244,6 @@ export function AIExtenderControls({ project }: { project: Project }) {
         </div>
       )}
 
-      {/* Apply Button */}
       <Button
         onClick={applyExtension}
         disabled={!selectedDirection}
@@ -269,10 +254,9 @@ export function AIExtenderControls({ project }: { project: Project }) {
         Apply AI Extension
       </Button>
 
-      {/* Instructions */}
-      <div className="rounded-lg bg-neutral-200/50 p-3 ring-1 ring-neutral-400/60 dark:bg-neutral-700/50 dark:ring-neutral-600/80">
-        <p className="text-xs opacity-70">
-          <strong>How it works:</strong> Select one direction → Set amount →
+      <div className="rounded-lg border border-border bg-muted/50 p-3">
+        <p className="text-xs text-muted-foreground">
+          <strong className="text-foreground">How it works:</strong> Select one direction → Set amount →
           Apply extension. AI will intelligently fill the new area in that
           direction.
         </p>

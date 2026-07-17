@@ -5,6 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Type,
   Trash2,
   Bold,
@@ -43,7 +50,6 @@ export function TextControls() {
   >("left");
   const [_, setChanged] = useState(0);
 
-  // Check if selected object is text
   const updateSelectedText = () => {
     if (!canvasEditor) return;
     const activeObject = canvasEditor.getActiveObject();
@@ -62,7 +68,6 @@ export function TextControls() {
     }
   };
 
-  // Listen for selection changes
   useEffect(() => {
     if (!canvasEditor) return;
 
@@ -83,7 +88,6 @@ export function TextControls() {
     };
   }, [canvasEditor]);
 
-  // Add new text to canvas
   const addText = () => {
     if (!canvasEditor) return;
 
@@ -110,7 +114,6 @@ export function TextControls() {
     }, 100);
   };
 
-  // Delete selected text
   const deleteSelectedText = () => {
     if (!canvasEditor || !selectedText) return;
 
@@ -119,7 +122,6 @@ export function TextControls() {
     setSelectedText(null);
   };
 
-  // Apply font family to selected text
   const applyFontFamily = (family: string) => {
     if (!selectedText) return;
     setFontFamily(family);
@@ -127,7 +129,6 @@ export function TextControls() {
     canvasEditor.requestRenderAll();
   };
 
-  // Apply font size to selected text
   const applyFontSize = (size: number | number[]) => {
     if (!selectedText) return;
     const newSize = Array.isArray(size) ? size[0] : size;
@@ -136,7 +137,6 @@ export function TextControls() {
     canvasEditor.requestRenderAll();
   };
 
-  // Apply text alignment to selected text
   const applyTextAlign = (
     alignment: "left" | "center" | "right" | "justify",
   ) => {
@@ -146,7 +146,6 @@ export function TextControls() {
     canvasEditor.requestRenderAll();
   };
 
-  // Apply text color to selected text
   const applyTextColor = (color: string) => {
     if (!selectedText) return;
     setTextColor(color);
@@ -154,7 +153,6 @@ export function TextControls() {
     canvasEditor.requestRenderAll();
   };
 
-  // Toggle text formatting
   const toggleFormat = (format: "bold" | "italic" | "underline") => {
     if (!selectedText) return;
 
@@ -180,24 +178,23 @@ export function TextControls() {
     }
 
     canvasEditor.requestRenderAll();
-    setChanged((c) => c + 1); // 👈 force rerender to update buttons
+    setChanged((c) => c + 1);
   };
 
   if (!canvasEditor) {
     return (
       <div className="p-4">
-        <p className="text-sm text-white/70">Canvas not ready</p>
+        <p className="text-sm text-muted-foreground">Canvas not ready</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Add Text Button */}
-      <div className="space-y-4">
+    <div className="space-y-5">
+      <div className="space-y-3">
         <div>
-          <h3 className="mb-2 text-sm font-medium">Add Text</h3>
-          <p className="mb-4 text-xs opacity-70">
+          <h3 className="mb-1 text-sm font-medium text-foreground">Add Text</h3>
+          <p className="text-xs text-muted-foreground">
             Click to add editable text to your canvas
           </p>
         </div>
@@ -207,32 +204,30 @@ export function TextControls() {
         </Button>
       </div>
 
-      {/* Text Editing Controls - Show only when text is selected */}
       {selectedText && (
-        <div className="border-t border-white/10 pt-6">
-          <h3 className="mb-4 text-sm font-medium">Edit Selected Text</h3>
+        <div className="space-y-4 border-t border-border pt-4">
+          <h3 className="text-sm font-medium text-foreground">Edit Selected Text</h3>
 
-          {/* Font Family */}
-          <div className="mb-4 space-y-2">
-            <label className="text-xs opacity-70">Font Family</label>
-            <select
-              value={fontFamily}
-              onChange={(e) => applyFontFamily(e.target.value)}
-              className="w-full rounded border border-white/20 bg-neutral-200/50 px-3 py-2 text-sm ring-1 ring-neutral-400/60 dark:bg-neutral-800 dark:ring-neutral-600/80"
-            >
-              {FONT_FAMILIES.map((font) => (
-                <option key={font} value={font}>
-                  {font}
-                </option>
-              ))}
-            </select>
+          <div className="space-y-2">
+            <label className="text-xs text-muted-foreground">Font Family</label>
+            <Select value={fontFamily} onValueChange={applyFontFamily}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select font" />
+              </SelectTrigger>
+              <SelectContent>
+                {FONT_FAMILIES.map((font) => (
+                  <SelectItem key={font} value={font}>
+                    {font}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
-          {/* Font Size Slider */}
-          <div className="mb-4 space-y-2">
+          <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <label className="text-xs opacity-70">Font Size</label>
-              <span className="text-xs opacity-70">{fontSize}px</span>
+              <label className="text-xs text-muted-foreground">Font Size</label>
+              <span className="text-xs tabular-nums text-muted-foreground">{fontSize}px</span>
             </div>
             <Slider
               value={[fontSize]}
@@ -244,9 +239,8 @@ export function TextControls() {
             />
           </div>
 
-          {/* Text Alignment */}
-          <div className="mb-4 space-y-2">
-            <label className="text-xs opacity-70">Text Alignment</label>
+          <div className="space-y-2">
+            <label className="text-xs text-muted-foreground">Text Alignment</label>
             <div className="grid grid-cols-4 gap-1">
               {(
                 [
@@ -269,28 +263,26 @@ export function TextControls() {
             </div>
           </div>
 
-          {/* Text Color */}
-          <div className="mb-4 space-y-2">
-            <label className="text-xs text-white/70">Text Color</label>
+          <div className="space-y-2">
+            <label className="text-xs text-muted-foreground">Text Color</label>
             <div className="flex gap-2">
               <input
                 type="color"
                 value={textColor}
                 onChange={(e) => applyTextColor(e.target.value)}
-                className="h-10 w-10 cursor-pointer rounded border border-white/20 bg-transparent"
+                className="h-10 w-10 cursor-pointer rounded-md border border-border bg-transparent"
               />
               <Input
                 value={textColor}
                 onChange={(e) => applyTextColor(e.target.value)}
                 placeholder="#000000"
-                className="flex-1 bg-neutral-200/50 ring-1 ring-neutral-400/60 dark:bg-neutral-700/50 dark:ring-neutral-600/80"
+                className="flex-1"
               />
             </div>
           </div>
 
-          {/* Text Formatting */}
-          <div className="mb-4 space-y-2">
-            <label className="text-xs text-white/70">Formatting</label>
+          <div className="space-y-2">
+            <label className="text-xs text-muted-foreground">Formatting</label>
             <div className="flex gap-2">
               <Button
                 onClick={() => toggleFormat("bold")}
@@ -323,11 +315,10 @@ export function TextControls() {
             </div>
           </div>
 
-          {/* Delete Text */}
           <Button
             onClick={deleteSelectedText}
-            variant="custom"
-            className="w-full border-red-400/20  hover:opacity-80"
+            variant="destructive"
+            className="w-full"
           >
             <Trash2 className="mr-2 h-4 w-4" />
             Delete Text
@@ -335,12 +326,11 @@ export function TextControls() {
         </div>
       )}
 
-      {/* Instructions */}
-      <div className="rounded-lg bg-neutral-200/50 p-3 ring-1 ring-neutral-400/60 dark:bg-neutral-700/50 dark:ring-neutral-600/80">
-        <p className="text-xs opacity-70">
-          <strong>Double-click</strong> any text to edit it directly on canvas.
+      <div className="rounded-lg border border-border bg-muted/50 p-3">
+        <p className="text-xs text-muted-foreground">
+          <strong className="text-foreground">Double-click</strong> any text to edit it directly on canvas.
           <br />
-          <strong>Select</strong> text to see formatting options here.
+          <strong className="text-foreground">Select</strong> text to see formatting options here.
         </p>
       </div>
     </div>

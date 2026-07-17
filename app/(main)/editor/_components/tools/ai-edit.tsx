@@ -55,7 +55,7 @@ const RETOUCH_PRESETS = [
 
 export function AIEdit({ project }: { project: Project }) {
   const { canvasEditor, setProcessingMessage } = useCanvas();
-  const [selectedPreset, setSelectedPreset] = useState("ai_retouch"); // Fixed default
+  const [selectedPreset, setSelectedPreset] = useState("ai_retouch");
   const { mutate: updateProject } = useConvexMutation(
     api.project.updateProject,
   );
@@ -77,12 +77,10 @@ export function AIEdit({ project }: { project: Project }) {
       const existingTr = params.get("tr");
 
       if (existingTr) {
-        // Append retouch to existing transformations
         return `${baseUrl}?tr=${existingTr},${preset.transform}`;
       }
     }
 
-    // No existing transformations, create new
     return `${baseUrl}?tr=${preset.transform}`;
   };
 
@@ -108,7 +106,6 @@ export function AIEdit({ project }: { project: Project }) {
         crossOrigin: "anonymous",
       });
 
-      // Preserve current image properties
       const imageProps = {
         left: mainImage.left,
         top: mainImage.top,
@@ -121,7 +118,6 @@ export function AIEdit({ project }: { project: Project }) {
         evented: true,
       };
 
-      // Replace image
       canvasEditor.remove(mainImage);
       retouchedImage.set(imageProps);
       canvasEditor.add(retouchedImage);
@@ -129,7 +125,6 @@ export function AIEdit({ project }: { project: Project }) {
       canvasEditor.setActiveObject(retouchedImage);
       canvasEditor.requestRenderAll();
 
-      // Update project
       await updateProject({
         projectId: project._id,
         currentImageUrl: retouchedUrl,
@@ -144,20 +139,19 @@ export function AIEdit({ project }: { project: Project }) {
     }
   };
 
-  // Early returns
   if (!canvasEditor) {
-    return <div className="p-4 text-sm text-white/70">Canvas not ready</div>;
+    return <div className="p-4 text-sm text-muted-foreground">Canvas not ready</div>;
   }
 
   const mainImage = getMainImage();
   if (!mainImage) {
     return (
-      <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 p-4">
+      <div className="rounded-lg border border-destructive/20 bg-destructive/10 p-4">
         <div className="flex items-start gap-3">
-          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-400" />
+          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" />
           <div>
-            <h3 className="mb-1 font-medium text-amber-400">No Image Found</h3>
-            <p className="text-sm text-amber-300/80">
+            <h3 className="mb-1 font-medium text-destructive">No Image Found</h3>
+            <p className="text-sm text-destructive/80">
               Please add an image to the canvas first to use AI retouching.
             </p>
           </div>
@@ -173,8 +167,7 @@ export function AIEdit({ project }: { project: Project }) {
   );
 
   return (
-    <div className="space-y-6">
-      {/* Status Indicator */}
+    <div className="space-y-5">
       {hasActiveTransformations && (
         <div className="rounded-lg border border-green-500/20 bg-green-500/10 p-4">
           <div className="flex items-start gap-3">
@@ -191,9 +184,8 @@ export function AIEdit({ project }: { project: Project }) {
         </div>
       )}
 
-      {/* Preset Selection */}
       <div>
-        <h3 className="mb-3 text-sm font-medium">Choose Enhancement Style</h3>
+        <h3 className="mb-3 text-sm font-medium text-foreground">Choose Enhancement Style</h3>
         <div className="grid grid-cols-2 gap-3">
           {RETOUCH_PRESETS.map((preset) => {
             const Icon = preset.icon;
@@ -204,27 +196,27 @@ export function AIEdit({ project }: { project: Project }) {
                 key={preset.key}
                 className={`relative cursor-pointer rounded-lg border p-4 transition-all ${
                   isSelected
-                    ? "border-primary bg-neutral-400/10"
-                    : "border-black/15 bg-white hover:border-white/40 dark:border-white/20 dark:bg-neutral-900/30"
+                    ? "border-primary bg-primary/10"
+                    : "border-border bg-card hover:border-foreground/30"
                 }`}
                 onClick={() => setSelectedPreset(preset.key)}
               >
                 <div className="flex flex-col items-center text-center">
-                  <Icon className="text-primary mb-2 h-8 w-8" />
+                  <Icon className={`mb-2 h-8 w-8 ${isSelected ? "text-primary" : "text-muted-foreground"}`} />
                   <div className="mb-1 flex items-center gap-2">
-                    <h4 className="text-sm font-medium">{preset.label}</h4>
+                    <h4 className="text-sm font-medium text-foreground">{preset.label}</h4>
                     {preset.recommended && (
-                      <span className="bg-primary rounded-full px-1.5 py-0.5 text-xs text-white dark:text-black">
+                      <span className="rounded-full bg-primary px-1.5 py-0.5 text-[10px] text-primary-foreground">
                         ★
                       </span>
                     )}
                   </div>
-                  <p className="text-xs opacity-70">{preset.description}</p>
+                  <p className="text-xs text-muted-foreground">{preset.description}</p>
                 </div>
 
                 {isSelected && (
-                  <div className="absolute top-2 right-2">
-                    <div className="h-3 w-3 rounded-full bg-cyan-400"></div>
+                  <div className="absolute right-2 top-2">
+                    <div className="h-3 w-3 rounded-full bg-primary" />
                   </div>
                 )}
               </div>
@@ -233,34 +225,21 @@ export function AIEdit({ project }: { project: Project }) {
         </div>
       </div>
 
-      {/* Apply Button */}
       <Button onClick={applyRetouch} className="w-full" variant="default">
         <Wand2 className="mr-2 h-4 w-4" />
         Apply {selectedPresetData?.label}
       </Button>
 
-      {/* Information */}
-      <div className="rounded-lg border-transparent bg-neutral-200/40 p-4 ring ring-black/10 dark:bg-slate-700/30">
-        <h4 className="mb-2 flex items-center gap-2 text-sm font-medium">
-          <Info className="h-4 w-4" />
+      <div className="rounded-lg border border-border bg-muted/50 p-4">
+        <h4 className="mb-2 flex items-center gap-2 text-sm font-medium text-foreground">
+          <Info className="h-4 w-4 text-muted-foreground" />
           How AI Retouch Works
         </h4>
-        <div className="space-y-2 text-xs opacity-70">
-          <p>
-            • <strong>AI Retouch:</strong> AI analyzes and applies optimal
-            improvements
-          </p>
-          <p>
-            • <strong>Smart Processing:</strong> Preserves details while
-            enhancing quality
-          </p>
-          <p>
-            • <strong>Multiple Styles:</strong> Choose enhancement that fits
-            your image
-          </p>
-          <p>
-            • <strong>Instant Results:</strong> See improvements in seconds
-          </p>
+        <div className="space-y-1.5 text-xs text-muted-foreground">
+          <p>• <strong className="text-foreground">AI Retouch:</strong> AI analyzes and applies optimal improvements</p>
+          <p>• <strong className="text-foreground">Smart Processing:</strong> Preserves details while enhancing quality</p>
+          <p>• <strong className="text-foreground">Multiple Styles:</strong> Choose enhancement that fits your image</p>
+          <p>• <strong className="text-foreground">Instant Results:</strong> See improvements in seconds</p>
         </div>
       </div>
     </div>

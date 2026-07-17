@@ -241,150 +241,141 @@ const EditorTopbar = ({ project }: { project: Project }) => {
 
   return (
     <>
-      <div className="border-b px-6 py-4 dark:bg-neutral-950/80">
-        <div className="mb-3 flex items-center justify-between">
-          <Button
-            variant={"custom"}
-            size={"sm"}
-            onClick={handleBackToDashboard}
-          >
-            <ArrowLeft /> All Projects
-          </Button>
-          <h2 className="capitalize">{project.title}</h2>
-          <div className="flex items-center gap-4">
+      <div className="supports-[backdrop-filter]:bg-background/80 sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-xl">
+        <div className="grid grid-cols-3 items-center gap-4 px-4 py-2.5">
+          <div className="flex items-center gap-3 justify-self-start">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleBackToDashboard}
+              className="gap-1.5 text-muted-foreground"
+            >
+              <ArrowLeft size={16} />
+              All Projects
+            </Button>
+            <span className="h-4 w-px bg-border" />
+            <h2 className="text-sm font-medium capitalize text-foreground">{project.title}</h2>
+          </div>
+
+          <div className="flex justify-center">
+            <div className="flex items-center gap-1 rounded-lg border border-border bg-muted/50 p-0.5">
+              {TOOLS.map((tools) => {
+                const Icon = tools.icon;
+                const isActive = activeTool === tools.id;
+                const hasToolAccess = hasAccess(tools.id);
+                return (
+                  <Button
+                    key={tools.id}
+                    variant={isActive ? "default" : "ghost"}
+                    size="sm"
+                    className={`relative gap-1.5 text-xs ${!hasToolAccess ? "opacity-50" : ""} ${isActive ? "shadow-xs" : ""}`}
+                    onClick={() => handleToolChange(tools.id)}
+                  >
+                    <Icon size={14} />
+                    {tools.label}
+                    {tools.proOnly && !hasToolAccess && <Lock size={10} />}
+                  </Button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 justify-self-end">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={undo}
+              disabled={!canUndo}
+              className="h-8 w-8 text-muted-foreground"
+            >
+              <RotateCcw size={14} />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={redo}
+              disabled={!canRedo}
+              className="h-8 w-8 text-muted-foreground"
+            >
+              <RotateCw size={14} />
+            </Button>
+
+            <span className="h-4 w-px bg-border" />
+
             <Button
               variant="outline"
               size="sm"
               onClick={reset}
               disabled={isSaving || !project.originalImageUrl}
-              className="gap-2"
+              className="gap-1.5 text-xs"
             >
-              {" "}
-              <RefreshCcw />
+              <RefreshCcw size={14} />
               Reset
             </Button>
+
             <Button
               variant="default"
               size="sm"
               onClick={handleManualSave}
               disabled={isSaving || !canvasEditor}
+              className="w-[82px] gap-1.5 text-xs"
             >
               {isSaving ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  saving
-                </>
+                <Loader2 size={14} className="animate-spin" />
               ) : (
-                <>
-                  <Save className="mr-2 h-4 w-4" />
-                  Save
-                </>
+                <Save size={14} />
               )}
+              <span>{isSaving ? "Saving" : "Save"}</span>
             </Button>
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
-                  variant={"outline"}
-                  size={"sm"}
+                  variant="outline"
+                  size="sm"
                   disabled={isExporting || !canvasEditor}
-                  className="gap-2"
+                  className="gap-1.5 text-xs"
                 >
                   {isExporting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Exporting {exportFormat}
-                    </>
+                    <Loader2 size={14} className="animate-spin" />
                   ) : (
-                    <>
-                      <Download className="h-4 w-4" />
-                      Export
-                      <ChevronDown className="h-4 w-4" />
-                    </>
+                    <Download size={14} />
                   )}
+                  {isExporting ? `Exporting ${exportFormat}` : "Export"}
+                  <ChevronDown size={12} />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuGroup>
-                  <DropdownMenuLabel className="opacity-70">
-                    Export Resolution: {project.width} x {project.height}px
-                  </DropdownMenuLabel>
-                </DropdownMenuGroup>
-                <DropdownMenuGroup>
-                  <DropdownMenuSeparator />
-                  {EXPORT_FORMATS.map((format) => (
-                    <DropdownMenuItem
-                      key={format.label}
-                      onClick={() => handleExport(format)}
-                      className="flex cursor-pointer items-center gap-2"
-                    >
-                      <FileImage className="mr-2 h-4 w-4" />
-                      <div>
-                        <div>{format.format}</div>
-                        <div>
-                          {format.format} {Math.round(format.quality * 100)}%
-                          Quality
-                        </div>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+                  Export Resolution: {project.width} × {project.height}px
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {EXPORT_FORMATS.map((format) => (
+                  <DropdownMenuItem
+                    key={format.label}
+                    onClick={() => handleExport(format)}
+                    className="gap-3"
+                  >
+                    <FileImage size={16} className="text-muted-foreground" />
+                    <div>
+                      <div className="text-sm">{format.format}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {Math.round(format.quality * 100)}% Quality
                       </div>
-                    </DropdownMenuItem>
-                  ))}
-                  <DropdownMenuSeparator />
-                  <div className="px-2 py-1 text-sm text-wrap">
-                    Free Plan: {user?.exportProjectThisMonth || 0}/20 exports
-                    this month
-                    {(user?.exportProjectThisMonth || 0) >= 20 && (
-                      <div className="mt-1 text-sm text-red-600">
-                        You have reached your export limit. Upgrade to Pro for
-                        more exports.
-                      </div>
-                    )}
-                  </div>
-                </DropdownMenuGroup>
+                    </div>
+                  </DropdownMenuItem>
+                ))}
+                <DropdownMenuSeparator />
+                <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                  Free Plan: {user?.exportProjectThisMonth || 0}/20 exports this month
+                  {(user?.exportProjectThisMonth || 0) >= 20 && (
+                    <p className="mt-0.5 text-destructive">Limit reached. Upgrade to Pro.</p>
+                  )}
+                </div>
               </DropdownMenuContent>
             </DropdownMenu>
-            <ModeToggle />
-          </div>
-        </div>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            {TOOLS.map((tools) => {
-              const Icon = tools.icon;
-              const isActive = activeTool === tools.id;
-              const hasToolAccess = hasAccess(tools.id);
-              return (
-                <Button
-                  key={tools.id}
-                  variant={isActive ? "default" : "secondary"}
-                  size="sm"
-                  className={`text-sm ${!hasToolAccess ? "opacity-60" : ""}`}
-                  onClick={() => handleToolChange(tools.id)}
-                >
-                  <Icon />
-                  {tools.label}
-                  {tools.proOnly && !hasToolAccess && <Lock />}
-                </Button>
-              );
-            })}
-          </div>
 
-          <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={undo}
-              disabled={!canUndo}
-              className={`transition-colors duration-200 hover:bg-neutral-200/90`}
-            >
-              <RotateCcw className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={redo}
-              disabled={!canRedo}
-              className={`transition-colors duration-200 hover:bg-neutral-200/50`}
-            >
-              <RotateCw className="h-4 w-4" />
-            </Button>
+            <ModeToggle />
           </div>
         </div>
       </div>

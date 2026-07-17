@@ -208,6 +208,20 @@
 @utility animate-delay-1200 { animation-delay: 1.2s; }
 @utility animate-delay-1400 { animation-delay: 1.4s; }
 
+@utility scrollbar-thin {
+  &::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: hsl(var(--border));
+  }
+}
+
 .cl-internal-1dauvpw {
   display: none;
 }

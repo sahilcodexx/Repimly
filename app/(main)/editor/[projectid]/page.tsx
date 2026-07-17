@@ -141,11 +141,11 @@ const Editor = () => {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-3">
-        <span className="animate-spin">
-          <Loader2 height={50} width={40} />
-        </span>
-        <p>Loading Please wait.</p>
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4">
+        <div className="flex items-center gap-3 text-muted-foreground">
+          <Loader2 size={20} className="animate-spin" />
+          <p className="text-sm">Loading project...</p>
+        </div>
       </div>
     );
   }
@@ -153,11 +153,14 @@ const Editor = () => {
   if (error || !project) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <h2 className="mb-2 text-2xl font-bold text-red-500">
+        <div className="rounded-xl border border-border bg-card p-8 text-center shadow-sm">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
+            <Monitor className="h-6 w-6 text-destructive" />
+          </div>
+          <h2 className="mb-1 text-lg font-semibold text-foreground">
             Project Not Found
           </h2>
-          <p className="text-gray-600">
+          <p className="text-sm text-muted-foreground">
             The project you're looking for doesn't exist or has been removed.
           </p>
         </div>
@@ -186,10 +189,10 @@ const Editor = () => {
       }}
     >
       <div className="flex min-h-screen items-center justify-center text-center lg:hidden">
-        <div>
-          <Monitor className="mx-auto mb-5 h-16 w-16" />
-          <h2 className="text-4xl">Desktop Required</h2>
-          <p className="text-sm opacity-80">
+        <div className="max-w-sm px-4">
+          <Monitor className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+          <h2 className="mb-1 text-xl font-semibold text-foreground">Desktop Required</h2>
+          <p className="text-sm text-muted-foreground">
             Please use a larger screen to access the full editing experience
           </p>
         </div>
@@ -211,7 +214,7 @@ const Editor = () => {
           </div>
         )}
         <EditorTopbar project={projectWithId!} />
-        <div className="flex h-[calc(100vh-var(--topbar-height))] overflow-hidden">
+        <div className="flex h-[calc(100vh-3.5rem)] overflow-hidden">
           <EditorSidebar project={projectWithId!} />
           <div className="flex-1 bg-muted/30">
             <CanvasEditor project={projectWithId!} />

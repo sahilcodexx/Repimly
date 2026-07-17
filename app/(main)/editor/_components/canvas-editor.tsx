@@ -115,7 +115,6 @@ const CanvasEditor = ({ project }: { project: Project }) => {
       saveState();
 
       setTimeout(() => {
-        // workaround for initial resize issues
         window.dispatchEvent(new Event("resize"));
       }, 500);
 
@@ -207,30 +206,30 @@ const CanvasEditor = ({ project }: { project: Project }) => {
   return (
     <div
       ref={containerRef}
-      className="relative flex h-full w-full items-center justify-center overflow-hidden"
+      className="relative flex h-full w-full items-center justify-center overflow-hidden bg-muted/30"
     >
       <div
-        className="pointer-events-none absolute inset-0 opacity-10"
+        className="pointer-events-none absolute inset-0 opacity-[0.03]"
         style={{
           backgroundImage: `
-            linear-gradient(45deg, #64748b 25%, transparent 25%),
-            linear-gradient(-45deg, #64748b 25%, transparent 25%),
-            linear-gradient(45deg, transparent 75%, #64748b 75%),
-            linear-gradient(-45deg, transparent 75%, #64748b 75%)`,
+            linear-gradient(45deg, currentColor 25%, transparent 25%),
+            linear-gradient(-45deg, currentColor 25%, transparent 25%),
+            linear-gradient(45deg, transparent 75%, currentColor 75%),
+            linear-gradient(-45deg, transparent 75%, currentColor 75%)`,
           backgroundSize: "20px 20px",
           backgroundPosition: "0 0, 0 10px, 10px -10px, -10px 0px",
         }}
       />
       {isLoading && (
-        <div className="absolute inset-0 z-10 flex items-center justify-center bg-neutral-800/80">
+        <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/60 backdrop-blur-sm">
           <div className="flex flex-col items-center gap-4">
-            <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-orange-400"></div>
-            <p className="text-sm text-white/70">Loading Canvas</p>
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-foreground/30 border-t-foreground" />
+            <p className="text-sm text-muted-foreground">Loading Canvas</p>
           </div>
         </div>
       )}
-      <div className="px-5">
-        <canvas id="canvas" className="border" ref={canvasRef} />
+      <div className="rounded-xl border border-border bg-white p-1 shadow-sm">
+        <canvas id="canvas" ref={canvasRef} />
       </div>
     </div>
   );

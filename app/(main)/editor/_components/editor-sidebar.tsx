@@ -65,15 +65,21 @@ const EditorSidebar = ({ project }: { project: Project }) => {
 
   const Icon = toolConfig.icon;
   return (
-    <div className="flex w-80 min-w-80 flex-col border-r dark:bg-neutral-950/80">
-      <div className="border-b p-4">
-        <div className="flex items-center gap-3">
-          <Icon className="h-4 w-4" />
-          <h2>{toolConfig.title}</h2>
+    <div className="flex w-80 min-w-80 flex-col border-r border-border bg-card/50 backdrop-blur-sm">
+      <div className="border-b border-border p-4">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/10 text-primary">
+            <Icon className="h-3.5 w-3.5" />
+          </div>
+          <h2 className="text-sm font-semibold">{toolConfig.title}</h2>
         </div>
-        <p className="mt-1 text-sm">{toolConfig.description}</p>
+        <p className="mt-1.5 text-xs text-muted-foreground">{toolConfig.description}</p>
       </div>
-      <div className="flex-1 p-4">{renderToolConfig(activeTool, project)}</div>
+      <div className="scrollbar-thin flex-1 overflow-y-auto">
+        <div className="p-4">
+          {renderToolConfig(activeTool, project)}
+        </div>
+      </div>
     </div>
   );
 };
