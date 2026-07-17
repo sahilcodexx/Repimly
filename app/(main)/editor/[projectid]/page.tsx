@@ -194,31 +194,28 @@ const Editor = () => {
           </p>
         </div>
       </div>
-      <div className="hidden min-h-screen lg:block dark:bg-neutral-900">
-        <div>
-          {processingMessage && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs">
-              <div className="flex flex-col items-center gap-4 rounded-lg p-6">
-                <HashLoader color="#fff" />
-                <div className="text-center">
-                  <p className="text-xl font-medium text-white">
-                    {processingMessage}
-                  </p>
-                  <p className="mt-1 text-xs text-red-500 text-shadow-red-300">
-                    Please wait, do not switch tabs or navigate away
-                  </p>
-                </div>
+      <div className="hidden min-h-screen lg:block bg-background">
+        {processingMessage && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+            <div className="flex flex-col items-center gap-4 rounded-2xl border border-border bg-card p-8 shadow-2xl">
+              <HashLoader color="hsl(var(--primary))" />
+              <div className="text-center">
+                <p className="text-lg font-medium text-foreground">
+                  {processingMessage}
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Please wait, do not switch tabs or navigate away
+                </p>
               </div>
             </div>
-          )}
-          <EditorTopbar project={projectWithId!} />
-          <div className="flex min-h-screen flex-1 overflow-hidden">
-            <EditorSidebar project={projectWithId!} />
-            <div className="flex-1">
-              <CanvasEditor project={projectWithId!} />
-            </div>
           </div>
-          <div className=""></div>
+        )}
+        <EditorTopbar project={projectWithId!} />
+        <div className="flex h-[calc(100vh-var(--topbar-height))] overflow-hidden">
+          <EditorSidebar project={projectWithId!} />
+          <div className="flex-1 bg-muted/30">
+            <CanvasEditor project={projectWithId!} />
+          </div>
         </div>
       </div>
     </CanvasContext.Provider>

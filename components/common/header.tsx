@@ -42,7 +42,7 @@ const Header = () => {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, [scrolled]);
-  if (path.startsWith("/editor")) {
+  if (path.startsWith("/editor") || path.startsWith("/sign-in") || path.startsWith("/sign-up")) {
     return null;
   }
 

@@ -63,6 +63,9 @@
     }
   }
   --animate-shiny-text: shiny-text 8s infinite;
+  --animate-element: fade-slide-in 0.6s ease-out forwards;
+  --animate-slide-right: slide-right-in 0.8s ease-out forwards;
+  --animate-testimonial: testimonial-in 0.6s ease-out forwards;
   @keyframes shiny-text {
     0%,
     90%,
@@ -72,6 +75,42 @@
     30%,
     60% {
       background-position: calc(100% + var(--shiny-width)) 0;
+    }
+  }
+  @keyframes fade-slide-in {
+    from {
+      opacity: 0;
+      filter: blur(4px);
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      filter: blur(0px);
+      transform: translateY(0px);
+    }
+  }
+  @keyframes slide-right-in {
+    from {
+      opacity: 0;
+      filter: blur(4px);
+      transform: translateX(30px);
+    }
+    to {
+      opacity: 1;
+      filter: blur(0px);
+      transform: translateX(0px);
+    }
+  }
+  @keyframes testimonial-in {
+    from {
+      opacity: 0;
+      filter: blur(4px);
+      transform: translateY(20px) scale(0.95);
+    }
+    to {
+      opacity: 1;
+      filter: blur(0px);
+      transform: translateY(0px) scale(1);
     }
   }
 }
@@ -153,6 +192,21 @@
     @apply bg-background text-foreground;
   }
 }
+
+@utility animate-delay-50 { animation-delay: 0.05s; }
+@utility animate-delay-100 { animation-delay: 0.1s; }
+@utility animate-delay-200 { animation-delay: 0.2s; }
+@utility animate-delay-300 { animation-delay: 0.3s; }
+@utility animate-delay-350 { animation-delay: 0.35s; }
+@utility animate-delay-400 { animation-delay: 0.4s; }
+@utility animate-delay-500 { animation-delay: 0.5s; }
+@utility animate-delay-600 { animation-delay: 0.6s; }
+@utility animate-delay-700 { animation-delay: 0.7s; }
+@utility animate-delay-800 { animation-delay: 0.8s; }
+@utility animate-delay-900 { animation-delay: 0.9s; }
+@utility animate-delay-1000 { animation-delay: 1s; }
+@utility animate-delay-1200 { animation-delay: 1.2s; }
+@utility animate-delay-1400 { animation-delay: 1.4s; }
 
 .cl-internal-1dauvpw {
   display: none;
