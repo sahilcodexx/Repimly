@@ -16,6 +16,7 @@ import {
   Maximize2,
   Text,
   Eye,
+  Layers,
   ArrowLeft,
   Lock,
   RotateCcw,
@@ -84,6 +85,11 @@ const TOOLS: {
     label: "AI Editing",
     icon: Eye,
     proOnly: true,
+  },
+  {
+    id: "layers",
+    label: "Layers",
+    icon: Layers,
   },
 ];
 

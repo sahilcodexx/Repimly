@@ -4,6 +4,7 @@ type planAccess = {
   crop: true;
   adjust: true;
   text: true;
+  layers: true;
   background: false;
   ai_extender: false;
   ai_edit: false;
@@ -21,6 +22,7 @@ export function usePlanAccess() {
     crop: true,
     adjust: true,
     text: true,
+    layers: true,
 
     //this is pro tool access
     background: isPro,

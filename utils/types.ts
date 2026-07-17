@@ -99,4 +99,5 @@ export type ToolId =
   | "text"
   | "background"
   | "ai_extender"
-  | "ai_edit";
+  | "ai_edit"
+  | "layers";

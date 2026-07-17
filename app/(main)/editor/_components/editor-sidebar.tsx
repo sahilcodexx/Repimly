@@ -9,6 +9,7 @@ import {
   Maximize2,
   Text,
   Eye,
+  Layers,
 } from "lucide-react";
 import AdjustControl from "./tools/Adjust";
 import { ResizeContent } from "./tools/Resize";
@@ -17,6 +18,7 @@ import { BackgroundControls } from "./tools/background-controls";
 import { TextControls } from "./tools/text-control";
 import { AIExtenderControls } from "./tools/ai-extender-controls";
 import { AIEdit } from "./tools/ai-edit";
+import { LayerPanel } from "./tools/layer-panel";
 
 const TOOL_CONFIGS: Record<string, ToolConfig> = {
   resize: {
@@ -53,6 +55,11 @@ const TOOL_CONFIGS: Record<string, ToolConfig> = {
     title: "AI Editing",
     icon: Eye,
     description: "Enhance image quality with AI",
+  },
+  layers: {
+    title: "Layers",
+    icon: Layers,
+    description: "Manage object layering and visibility",
   },
 };
 const EditorSidebar = ({ project }: { project: Project }) => {
@@ -102,6 +109,8 @@ const renderToolConfig = (activeTool: string, project: Project) => {
       return <AIExtenderControls project={project} />;
     case "ai_edit":
       return <AIEdit project={project} />;
+    case "layers":
+      return <LayerPanel />;
     default:
       return <div>Select a Tool to get started</div>;
   }
