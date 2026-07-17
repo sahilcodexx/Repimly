@@ -37,7 +37,7 @@ const FONT_FAMILIES = [
   "Impact",
 ];
 
-const FONT_SIZES = { min: 8, max: 120, default: 20 };
+const FONT_SIZES = { min: 8, max: 120, default: 50 };
 
 export function TextControls() {
   const { canvasEditor } = useCanvas();
