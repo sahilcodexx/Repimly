@@ -17,6 +17,7 @@ import {
   Text,
   Eye,
   Layers,
+  Shapes,
   ArrowLeft,
   Lock,
   RotateCcw,
@@ -85,6 +86,11 @@ const TOOLS: {
     label: "AI Editing",
     icon: Eye,
     proOnly: true,
+  },
+  {
+    id: "shapes",
+    label: "Shapes",
+    icon: Shapes,
   },
   {
     id: "layers",

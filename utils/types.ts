@@ -100,4 +100,5 @@ export type ToolId =
   | "background"
   | "ai_extender"
   | "ai_edit"
-  | "layers";
+  | "layers"
+  | "shapes";

@@ -10,6 +10,7 @@ import {
   Text,
   Eye,
   Layers,
+  Shapes,
 } from "lucide-react";
 import AdjustControl from "./tools/Adjust";
 import { ResizeContent } from "./tools/Resize";
@@ -19,6 +20,7 @@ import { TextControls } from "./tools/text-control";
 import { AIExtenderControls } from "./tools/ai-extender-controls";
 import { AIEdit } from "./tools/ai-edit";
 import { LayerPanel } from "./tools/layer-panel";
+import { ShapeControls } from "./tools/shape-controls";
 
 const TOOL_CONFIGS: Record<string, ToolConfig> = {
   resize: {
@@ -60,6 +62,11 @@ const TOOL_CONFIGS: Record<string, ToolConfig> = {
     title: "Layers",
     icon: Layers,
     description: "Manage object layering and visibility",
+  },
+  shapes: {
+    title: "Shapes",
+    icon: Shapes,
+    description: "Add rectangles, circles, lines, and more",
   },
 };
 const EditorSidebar = ({ project }: { project: Project }) => {
@@ -111,6 +118,8 @@ const renderToolConfig = (activeTool: string, project: Project) => {
       return <AIEdit project={project} />;
     case "layers":
       return <LayerPanel />;
+    case "shapes":
+      return <ShapeControls />;
     default:
       return <div>Select a Tool to get started</div>;
   }
