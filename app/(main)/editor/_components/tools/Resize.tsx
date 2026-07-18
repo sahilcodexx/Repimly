@@ -3,11 +3,12 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Expand, Lock, Unlock, Monitor } from "lucide-react";
+import { Expand, Lock, Unlock } from "lucide-react";
 import { useCanvas } from "@/context/context";
 import { useConvexMutation } from "@/hooks/use-convex-query";
 import { api } from "@/convex/_generated/api";
 import { Project } from "@/utils/types";
+import { cn } from "@/lib/utils";
 
 interface AspectRatio {
   name: string;
@@ -94,17 +95,6 @@ export function ResizeContent({ project }: { project: Project }) {
     setSelectedPreset(aspectRatio.name);
   };
 
-  const calculateViewportScale = () => {
-    if (!canvasEditor) return 1;
-    const container = canvasEditor.getElement().parentNode;
-    if (!container) return 1;
-    const containerWidth = container.clientWidth - 40;
-    const containerHeight = container.clientHeight - 40;
-    const scaleX = containerWidth / newWidth;
-    const scaleY = containerHeight / newHeight;
-    return Math.min(scaleX, scaleY, 1);
-  };
-
   const handleApplyResize = async () => {
     if (
       !canvasEditor ||
@@ -137,114 +127,124 @@ export function ResizeContent({ project }: { project: Project }) {
 
   if (!canvasEditor || !project) {
     return (
-      <div className="p-4">
-        <p className="text-sm text-muted-foreground">Canvas not ready</p>
-      </div>
+      <p className="text-xs text-muted-foreground">Canvas not ready</p>
     );
   }
 
   const hasChanges = newWidth !== project.width || newHeight !== project.height;
 
   return (
-    <div className="space-y-5">
-      <div className="rounded-lg border border-border bg-muted/50 p-3">
-        <h4 className="mb-1 text-xs font-medium text-muted-foreground">Current Size</h4>
-        <p className="text-sm text-foreground">
-          {project.width} × {project.height} pixels
+    <div className="space-y-4">
+      <div className="rounded-md border border-border bg-muted/40 px-2.5 py-2">
+        <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+          Current
+        </p>
+        <p className="mt-0.5 text-[13px] tabular-nums text-foreground">
+          {project.width} × {project.height}
+          <span className="ml-1 text-[11px] text-muted-foreground">px</span>
         </p>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-medium text-foreground">Custom Size</h3>
-          <Button
-            variant="ghost"
-            size="sm"
+          <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+            Dimensions
+          </p>
+          <button
+            type="button"
             onClick={() => setLockAspectRatio(!lockAspectRatio)}
-            className="h-7 w-7 p-0 text-muted-foreground"
+            aria-label={lockAspectRatio ? "Unlock aspect ratio" : "Lock aspect ratio"}
+            className={cn(
+              "flex size-6 items-center justify-center rounded transition-colors duration-100 ease-out active:scale-[0.97]",
+              lockAspectRatio
+                ? "text-[#0d99ff]"
+                : "text-muted-foreground hover:text-foreground",
+            )}
           >
-            {lockAspectRatio ? <Lock className="h-3.5 w-3.5" /> : <Unlock className="h-3.5 w-3.5" />}
-          </Button>
+            {lockAspectRatio ? (
+              <Lock className="size-3" />
+            ) : (
+              <Unlock className="size-3" />
+            )}
+          </button>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="mb-1.5 block text-xs text-muted-foreground">Width</label>
+        <div className="grid grid-cols-2 gap-2">
+          <div className="space-y-1">
+            <label className="text-[11px] text-muted-foreground">W</label>
             <Input
               type="number"
               value={newWidth}
               onChange={(e) => handleWidthChange(e.target.value)}
               min="100"
               max="5000"
+              className="h-8 text-[13px] tabular-nums"
             />
           </div>
-          <div>
-            <label className="mb-1.5 block text-xs text-muted-foreground">Height</label>
+          <div className="space-y-1">
+            <label className="text-[11px] text-muted-foreground">H</label>
             <Input
               type="number"
               value={newHeight}
               onChange={(e) => handleHeightChange(e.target.value)}
               min="100"
               max="5000"
+              className="h-8 text-[13px] tabular-nums"
             />
           </div>
         </div>
-
-        <p className="text-xs text-muted-foreground">
-          {lockAspectRatio ? "Aspect ratio locked" : "Free resize"}
-        </p>
       </div>
 
-      <div className="space-y-3">
-        <h3 className="text-sm font-medium text-foreground">Aspect Ratios</h3>
-        <div className="grid max-h-60 grid-cols-1 gap-2 overflow-y-auto">
+      <div className="space-y-2">
+        <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+          Presets
+        </p>
+        <div className="flex flex-col gap-0.5">
           {ASPECT_RATIOS.map((aspectRatio) => {
-            const dimensions = calculateAspectRatioDimensions(
-              aspectRatio.ratio,
-            );
+            const dimensions = calculateAspectRatioDimensions(aspectRatio.ratio);
+            const isSelected = selectedPreset === aspectRatio.name;
             return (
-              <Button
+              <button
                 key={aspectRatio.name}
-                variant={
-                  selectedPreset === aspectRatio.name ? "default" : "outline"
-                }
-                size="sm"
+                type="button"
                 onClick={() => applyAspectRatio(aspectRatio)}
-                className="h-auto justify-between py-2"
+                className={cn(
+                  "flex w-full items-center justify-between rounded-md px-2.5 py-2 text-left transition-colors duration-100 ease-out active:scale-[0.99]",
+                  isSelected
+                    ? "bg-[#0d99ff]/10 text-[#0d99ff]"
+                    : "text-foreground hover:bg-muted",
+                )}
               >
-                <div className="text-left">
-                  <div className="text-sm font-medium">{aspectRatio.name}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {dimensions.width} × {dimensions.height} ({aspectRatio.label})
-                  </div>
-                </div>
-                <Monitor className="h-4 w-4 shrink-0 text-muted-foreground" />
-              </Button>
+                <span className="text-[13px] font-medium">{aspectRatio.name}</span>
+                <span
+                  className={cn(
+                    "text-[11px] tabular-nums",
+                    isSelected ? "text-[#0d99ff]/70" : "text-muted-foreground",
+                  )}
+                >
+                  {aspectRatio.label}
+                </span>
+              </button>
             );
           })}
         </div>
       </div>
 
       {hasChanges && (
-        <div className="rounded-lg border border-border bg-muted/50 p-3">
-          <h4 className="mb-1 text-xs font-medium text-muted-foreground">New Size Preview</h4>
-          <p className="text-xs text-foreground">
-            {newWidth} × {newHeight} pixels
-          </p>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            {newWidth > project.width || newHeight > project.height
-              ? "Canvas will be expanded"
-              : "Canvas will be cropped"}
-          </p>
-        </div>
+        <p className="text-[11px] text-muted-foreground">
+          New size:{" "}
+          <span className="tabular-nums text-foreground">
+            {newWidth} × {newHeight}
+          </span>
+        </p>
       )}
 
       <Button
         onClick={handleApplyResize}
         disabled={!hasChanges || !!processingMessage}
-        className="w-full gap-2"
+        className="h-8 w-full gap-1.5 rounded-md bg-[#0d99ff] text-xs font-medium text-white shadow-none hover:bg-[#0d99ff]/90"
       >
-        <Expand className="h-4 w-4" />
+        <Expand className="size-3.5" />
         Apply Resize
       </Button>
     </div>

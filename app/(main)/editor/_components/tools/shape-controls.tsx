@@ -129,97 +129,105 @@ export function ShapeControls() {
   };
 
   if (!canvasEditor) {
-    return (
-      <div className="p-4">
-        <p className="text-sm text-muted-foreground">Canvas not ready</p>
-      </div>
-    );
+    return <p className="text-xs text-muted-foreground">Canvas not ready</p>;
   }
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h3 className="mb-1 text-sm font-medium text-foreground">Shape Type</h3>
-        <div className="grid grid-cols-3 gap-2">
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+          Type
+        </p>
+        <div className="grid grid-cols-3 gap-1">
           {SHAPE_TYPES.map(({ id, label, icon: Icon }) => (
-              <button
-                key={id}
-                onClick={() => setShapeType(id)}
-                aria-label={`${label} shape`}
-                className={`flex cursor-pointer flex-col items-center gap-1 rounded-lg border p-3 transition-all ${
-                  shapeType === id
-                    ? "border-primary bg-primary/10 text-primary"
-                    : "border-border text-muted-foreground hover:border-foreground/30 hover:bg-muted/50"
-                }`}
-              >
-                <Icon className="h-5 w-5" />
-                <span className="text-[10px] font-medium">{label}</span>
-              </button>
+            <button
+              key={id}
+              type="button"
+              onClick={() => setShapeType(id)}
+              aria-label={`${label} shape`}
+              className={`flex cursor-pointer flex-col items-center gap-1 rounded-md p-2 transition-colors duration-100 ease-out active:scale-[0.97] ${
+                shapeType === id
+                  ? "bg-[#0d99ff]/10 text-[#0d99ff]"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              }`}
+            >
+              <Icon className="size-4" />
+              <span className="text-[10px] font-medium">{label}</span>
+            </button>
           ))}
         </div>
       </div>
 
       <div className="space-y-3">
-        <h3 className="text-sm font-medium text-foreground">Style</h3>
+        <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+          Style
+        </p>
 
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           <div className="flex items-center justify-between">
-            <label className="text-xs text-muted-foreground">Fill Color</label>
+            <label className="text-[11px] text-muted-foreground">Fill</label>
             <button
+              type="button"
               onClick={() => setNoFill(!noFill)}
               aria-label={noFill ? "Enable fill" : "Disable fill"}
-              className={`flex cursor-pointer items-center gap-1 rounded-md border px-2 py-1 text-[10px] transition-all ${
+              className={`flex cursor-pointer items-center gap-1 rounded px-1.5 py-0.5 text-[10px] transition-colors ${
                 noFill
-                  ? "border-primary bg-primary/10 text-primary"
-                  : "border-border text-muted-foreground hover:border-foreground/30"
+                  ? "bg-[#0d99ff]/10 text-[#0d99ff]"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              <Ban className="h-3 w-3" />
-              No Fill
+              <Ban className="size-3" />
+              None
             </button>
           </div>
           <div className="flex items-center gap-2">
             <input
               type="color"
               value={fillColor}
-              onChange={(e) => { setFillColor(e.target.value); setNoFill(false); }}
-              className="h-9 w-9 cursor-pointer rounded-md border border-border bg-transparent disabled:opacity-30"
+              onChange={(e) => {
+                setFillColor(e.target.value);
+                setNoFill(false);
+              }}
+              className="size-8 cursor-pointer rounded border border-border bg-transparent disabled:opacity-30"
               disabled={noFill}
               aria-label="Fill color"
             />
             <Input
               value={noFill ? "transparent" : fillColor}
-              onChange={(e) => { setFillColor(e.target.value); setNoFill(false); }}
+              onChange={(e) => {
+                setFillColor(e.target.value);
+                setNoFill(false);
+              }}
               placeholder="#4f46e5"
-              className="flex-1"
+              className="h-8 flex-1 text-[12px] tabular-nums"
               disabled={noFill}
             />
           </div>
         </div>
 
-        <div className="space-y-2">
-          <label className="text-xs text-muted-foreground">Stroke Color</label>
+        <div className="space-y-1.5">
+          <label className="text-[11px] text-muted-foreground">Stroke</label>
           <div className="flex items-center gap-2">
             <input
               type="color"
               value={strokeColor}
               onChange={(e) => setStrokeColor(e.target.value)}
-              className="h-9 w-9 cursor-pointer rounded-md border border-border bg-transparent"
+              className="size-8 cursor-pointer rounded border border-border bg-transparent"
               aria-label="Stroke color"
             />
             <Input
               value={strokeColor}
               onChange={(e) => setStrokeColor(e.target.value)}
               placeholder="#000000"
-              className="flex-1"
+              className="h-8 flex-1 text-[12px] tabular-nums"
             />
           </div>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           <div className="flex items-center justify-between">
-            <label className="text-xs text-muted-foreground">Stroke Width</label>
-            <span className="text-xs tabular-nums text-muted-foreground">
+            <label className="text-[11px] text-muted-foreground">Stroke width</label>
+            <span className="text-[11px] tabular-nums text-muted-foreground">
               {strokeWidth}px
             </span>
           </div>
@@ -234,36 +242,32 @@ export function ShapeControls() {
         </div>
       </div>
 
-        {shapeType === "rect" && (
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <label className="text-xs text-muted-foreground">Corner Radius</label>
-              <span className="text-xs tabular-nums text-muted-foreground">
-                {cornerRadius}px
-              </span>
-            </div>
-            <Slider
-              value={[cornerRadius]}
-              onValueChange={([v]) => setCornerRadius(v)}
-              min={0}
-              max={40}
-              step={1}
-              className="w-full"
-            />
+      {shapeType === "rect" && (
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between">
+            <label className="text-[11px] text-muted-foreground">Corner radius</label>
+            <span className="text-[11px] tabular-nums text-muted-foreground">
+              {cornerRadius}px
+            </span>
           </div>
-        )}
+          <Slider
+            value={[cornerRadius]}
+            onValueChange={([v]) => setCornerRadius(v)}
+            min={0}
+            max={40}
+            step={1}
+            className="w-full"
+          />
+        </div>
+      )}
 
-      <Button onClick={createShape} className="w-full gap-2" variant="default">
-        <MousePointerClick className="h-4 w-4" />
+      <Button
+        onClick={createShape}
+        className="h-8 w-full gap-1.5 rounded-md bg-[#0d99ff] text-xs font-medium text-white shadow-none hover:bg-[#0d99ff]/90"
+      >
+        <MousePointerClick className="size-3.5" />
         Add {SHAPE_TYPES.find((s) => s.id === shapeType)?.label}
       </Button>
-
-      <div className="rounded-lg border border-border bg-muted/50 p-3">
-        <p className="text-xs text-muted-foreground">
-          Customize your shape below, then click to add it to the canvas.
-          Shapes can be resized and rotated after placement.
-        </p>
-      </div>
     </div>
   );
 }

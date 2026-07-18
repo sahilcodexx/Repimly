@@ -1,26 +1,20 @@
 "use client";
+
 import UpgradeModel from "@/components/common/upgrade-model";
 import { ModeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useCanvas } from "@/context/context";
 import { api } from "@/convex/_generated/api";
-
 import { useConvexMutation, useConvexQuery } from "@/hooks/use-convex-query";
 import { usePlanAccess } from "@/hooks/use-plan-access";
-import { Project, ToolId, User } from "@/utils/types";
+import { Project, User } from "@/utils/types";
 import {
-  Crop,
-  Expand,
-  Sliders,
-  Palette,
-  Maximize2,
-  Text,
-  Eye,
-  Layers,
-  Shapes,
   ArrowLeft,
-  Lock,
   RotateCcw,
   RotateCw,
   RefreshCcw,
@@ -29,76 +23,20 @@ import {
   Download,
   ChevronDown,
   FileImage,
+  Check,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState, ElementType } from "react";
-import CanvasEditor from "./canvas-editor";
+import { useState } from "react";
 import { toast } from "sonner";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-const TOOLS: {
-  id: ToolId;
-  label: string;
-  icon: ElementType;
-  proOnly?: boolean;
-}[] = [
-  {
-    id: "resize",
-    label: "Resize",
-    icon: Expand,
-  },
-  {
-    id: "crop",
-    label: "Crop",
-    icon: Crop,
-  },
-  {
-    id: "adjust",
-    label: "Adjust",
-    icon: Sliders,
-  },
-  {
-    id: "text",
-    label: "Text",
-    icon: Text,
-  },
-  {
-    id: "background",
-    label: "AI Background",
-    icon: Palette,
-    proOnly: true,
-  },
-  {
-    id: "ai_extender",
-    label: "AI Image Extender",
-    icon: Maximize2,
-    proOnly: true,
-  },
-  {
-    id: "ai_edit",
-    label: "AI Editing",
-    icon: Eye,
-    proOnly: true,
-  },
-  {
-    id: "shapes",
-    label: "Shapes",
-    icon: Shapes,
-  },
-  {
-    id: "layers",
-    label: "Layers",
-    icon: Layers,
-  },
-];
+import { cn } from "@/lib/utils";
 
 const EXPORT_FORMATS = [
   {
@@ -130,14 +68,11 @@ const EXPORT_FORMATS = [
 const EditorTopbar = ({ project }: { project: Project }) => {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [restrictedTool, setRestrictedTool] = useState<string | null>(null);
-
   const [isExporting, setIsExporting] = useState(false);
   const [exportFormat, setExportFormat] = useState<string | null>(null);
-  const [viewportTransform, setViewportTransform] = useState();
+  const [justSaved, setJustSaved] = useState(false);
 
   const {
-    activeTool,
-    onToolChange,
     canvasEditor,
     undo,
     redo,
@@ -146,26 +81,25 @@ const EditorTopbar = ({ project }: { project: Project }) => {
     canRedo,
     isSaving,
   } = useCanvas();
-  const { hasAccess, canExport, isFree } = usePlanAccess();
+  const { canExport } = usePlanAccess();
   const router = useRouter();
 
-  const { mutate: updateProject, isLoading: isUpdatingProject } =
-    useConvexMutation(api.project.updateProject);
+  const { mutate: updateProject } = useConvexMutation(api.project.updateProject);
 
   const { data: user } = useConvexQuery(api.users.getCurrentUser) as {
     data: User | null;
   };
 
   const handleManualSave = async () => {
-    if (!canvasEditor) {
-      return;
-    }
+    if (!canvasEditor) return;
     try {
       await updateProject({
         projectId: project._id,
         canvasState: canvasEditor.toJSON(),
       });
-      toast.success("Project saved successfully!");
+      setJustSaved(true);
+      setTimeout(() => setJustSaved(false), 2000);
+      toast.success("Project saved");
     } catch (error) {
       console.error("Failed to save project", error);
       toast.error("Failed to save project");
@@ -174,15 +108,6 @@ const EditorTopbar = ({ project }: { project: Project }) => {
 
   const handleBackToDashboard = () => {
     router.push("/dashboard");
-  };
-
-  const handleToolChange = (toolId: ToolId) => {
-    if (!hasAccess(toolId)) {
-      setRestrictedTool(toolId);
-      setShowUpgradeModal(true);
-      return;
-    }
-    onToolChange(toolId);
   };
 
   const handleExport = async (exportConfig: {
@@ -242,7 +167,7 @@ const EditorTopbar = ({ project }: { project: Project }) => {
       link.click();
       document.body.removeChild(link);
 
-      toast.success("Image exported successfully as " + exportConfig.format);
+      toast.success("Exported as " + exportConfig.format);
     } catch (error) {
       console.error("Export failed", error);
       toast.error("Export failed. Please try again.");
@@ -253,176 +178,193 @@ const EditorTopbar = ({ project }: { project: Project }) => {
   };
 
   return (
-    <TooltipProvider delayDuration={400}>
-      <div className="supports-[backdrop-filter]:bg-background/80 sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-xl">
-        <div className="grid grid-cols-3 items-center gap-4 px-4 py-2.5">
-          <div className="flex items-center gap-3 justify-self-start">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleBackToDashboard}
-                  className="gap-1.5 text-muted-foreground"
-                >
-                  <ArrowLeft size={16} />
-                  All Projects
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Back to dashboard</TooltipContent>
-            </Tooltip>
-            <span className="h-4 w-px bg-border" />
-            <h2 className="text-sm font-medium capitalize text-foreground">{project.title}</h2>
-          </div>
+    <>
+      <header className="z-40 flex h-11 shrink-0 items-center justify-between border-b border-border bg-card px-2">
+        <div className="flex min-w-0 items-center gap-1">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                onClick={handleBackToDashboard}
+                aria-label="Back to dashboard"
+                className="flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors duration-100 ease-out hover:bg-muted hover:text-foreground active:scale-[0.97]"
+              >
+                <ArrowLeft className="size-4" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>All projects</TooltipContent>
+          </Tooltip>
 
-            <div className="flex justify-center">
-            <div className="flex items-center gap-1 rounded-lg border border-border bg-muted/50 p-0.5">
-              {TOOLS.map((tools) => {
-                const Icon = tools.icon;
-                const isActive = activeTool === tools.id;
-                const hasToolAccess = hasAccess(tools.id);
-                return (
-                  <Tooltip key={tools.id}>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant={isActive ? "default" : "ghost"}
-                        size="sm"
-                        className={`relative gap-1.5 text-xs ${!hasToolAccess ? "opacity-50" : ""} ${isActive ? "shadow-xs" : ""}`}
-                        onClick={() => handleToolChange(tools.id)}
-                      >
-                        <Icon size={14} />
-                        {tools.label}
-                        {tools.proOnly && !hasToolAccess && <Lock size={10} />}
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>{tools.label} tool</TooltipContent>
-                  </Tooltip>
-                );
-              })}
-            </div>
-          </div>
+          <div className="mx-1 h-4 w-px bg-border" />
 
-          <div className="flex items-center gap-2 justify-self-end">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={undo}
-                  disabled={!canUndo}
-                  className="h-8 w-8 text-muted-foreground"
-                  aria-label="Undo"
-                >
-                  <RotateCcw size={14} />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Undo <kbd className="ml-1 rounded border border-border px-1 text-[10px]">⌘Z</kbd></TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={redo}
-                  disabled={!canRedo}
-                  className="h-8 w-8 text-muted-foreground"
-                  aria-label="Redo"
-                >
-                  <RotateCw size={14} />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Redo <kbd className="ml-1 rounded border border-border px-1 text-[10px]">⌘⇧Z</kbd></TooltipContent>
-            </Tooltip>
+          <h1 className="max-w-[200px] truncate text-[13px] font-medium text-foreground">
+            {project.title}
+          </h1>
 
-            <span className="h-4 w-px bg-border" />
+          {isSaving && (
+            <span className="ml-2 flex items-center gap-1 text-[11px] text-muted-foreground">
+              <Loader2 className="size-3 animate-spin" />
+              Saving…
+            </span>
+          )}
+          {justSaved && !isSaving && (
+            <span className="ml-2 flex items-center gap-1 text-[11px] text-muted-foreground">
+              <Check className="size-3" />
+              Saved
+            </span>
+          )}
+        </div>
 
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={reset}
-                  disabled={isSaving || !project.originalImageUrl}
-                  className="gap-1.5 text-xs"
-                >
-                  <RefreshCcw size={14} />
-                  Reset
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Reset to original image</TooltipContent>
-            </Tooltip>
+        <div className="flex items-center gap-0.5">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                onClick={undo}
+                disabled={!canUndo}
+                aria-label="Undo"
+                className={cn(
+                  "flex size-8 items-center justify-center rounded-md transition-colors duration-100 ease-out active:scale-[0.97]",
+                  canUndo
+                    ? "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    : "cursor-not-allowed text-muted-foreground/30",
+                )}
+              >
+                <RotateCcw className="size-3.5" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>
+              Undo{" "}
+              <kbd className="ml-1 rounded border border-border/40 px-1 text-[10px]">
+                ⌘Z
+              </kbd>
+            </TooltipContent>
+          </Tooltip>
 
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="default"
-                  size="sm"
-                  onClick={handleManualSave}
-                  disabled={isSaving || !canvasEditor}
-                  className="w-[82px] gap-1.5 text-xs"
-                >
-                  {isSaving ? (
-                    <Loader2 size={14} className="animate-spin" />
-                  ) : (
-                    <Save size={14} />
-                  )}
-                  <span>{isSaving ? "Saving" : "Save"}</span>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Save <kbd className="ml-1 rounded border border-border px-1 text-[10px]">⌘S</kbd></TooltipContent>
-            </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                onClick={redo}
+                disabled={!canRedo}
+                aria-label="Redo"
+                className={cn(
+                  "flex size-8 items-center justify-center rounded-md transition-colors duration-100 ease-out active:scale-[0.97]",
+                  canRedo
+                    ? "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    : "cursor-not-allowed text-muted-foreground/30",
+                )}
+              >
+                <RotateCw className="size-3.5" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>
+              Redo{" "}
+              <kbd className="ml-1 rounded border border-border/40 px-1 text-[10px]">
+                ⌘⇧Z
+              </kbd>
+            </TooltipContent>
+          </Tooltip>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={isExporting || !canvasEditor}
-                  className="gap-1.5 text-xs"
+          <div className="mx-1 h-4 w-px bg-border" />
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                onClick={reset}
+                disabled={isSaving || !project.originalImageUrl}
+                aria-label="Reset"
+                className="flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors duration-100 ease-out hover:bg-muted hover:text-foreground active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
+              >
+                <RefreshCcw className="size-3.5" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>Reset to original</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                onClick={handleManualSave}
+                disabled={isSaving || !canvasEditor}
+                aria-label="Save"
+                className="flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors duration-100 ease-out hover:bg-muted hover:text-foreground active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
+              >
+                {isSaving ? (
+                  <Loader2 className="size-3.5 animate-spin" />
+                ) : (
+                  <Save className="size-3.5" />
+                )}
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>
+              Save{" "}
+              <kbd className="ml-1 rounded border border-border/40 px-1 text-[10px]">
+                ⌘S
+              </kbd>
+            </TooltipContent>
+          </Tooltip>
+
+          <div className="mx-1 h-4 w-px bg-border" />
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                size="sm"
+                disabled={isExporting || !canvasEditor}
+                className="h-7 gap-1.5 rounded-md bg-[#0d99ff] px-2.5 text-xs font-medium text-white shadow-none hover:bg-[#0d99ff]/90 active:scale-[0.97]"
+              >
+                {isExporting ? (
+                  <Loader2 className="size-3.5 animate-spin" />
+                ) : (
+                  <Download className="size-3.5" />
+                )}
+                {isExporting ? exportFormat : "Export"}
+                <ChevronDown className="size-3 opacity-70" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+                {project.width} × {project.height}px
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {EXPORT_FORMATS.map((format) => (
+                <DropdownMenuItem
+                  key={format.label}
+                  onClick={() => handleExport(format)}
+                  className="gap-3"
                 >
-                  {isExporting ? (
-                    <Loader2 size={14} className="animate-spin" />
-                  ) : (
-                    <Download size={14} />
-                  )}
-                  {isExporting ? `Exporting ${exportFormat}` : "Export"}
-                  <ChevronDown size={12} />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
-                  Export Resolution: {project.width} × {project.height}px
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                {EXPORT_FORMATS.map((format) => (
-                  <DropdownMenuItem
-                    key={format.label}
-                    onClick={() => handleExport(format)}
-                    className="gap-3"
-                  >
-                    <FileImage size={16} className="text-muted-foreground" />
-                    <div>
-                      <div className="text-sm">{format.format}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {Math.round(format.quality * 100)}% Quality
-                      </div>
+                  <FileImage className="size-4 text-muted-foreground" />
+                  <div>
+                    <div className="text-sm">{format.format}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {Math.round(format.quality * 100)}% Quality
                     </div>
-                  </DropdownMenuItem>
-                ))}
-                <DropdownMenuSeparator />
-                <div className="px-2 py-1.5 text-xs text-muted-foreground">
-                  Free Plan: {user?.exportProjectThisMonth || 0}/20 exports this month
-                  {(user?.exportProjectThisMonth || 0) >= 20 && (
-                    <p className="mt-0.5 text-destructive">Limit reached. Upgrade to Pro.</p>
-                  )}
-                </div>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                  </div>
+                </DropdownMenuItem>
+              ))}
+              <DropdownMenuSeparator />
+              <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                Free: {user?.exportProjectThisMonth || 0}/20 exports this month
+                {(user?.exportProjectThisMonth || 0) >= 20 && (
+                  <p className="mt-0.5 text-destructive">
+                    Limit reached. Upgrade to Pro.
+                  </p>
+                )}
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
+          <div className="mx-1 h-4 w-px bg-border" />
+
+          <div className="[&_button]:size-8 [&_button]:rounded-md [&_button]:border-0 [&_button]:bg-transparent [&_button]:shadow-none [&_button]:hover:bg-muted">
             <ModeToggle />
           </div>
         </div>
-      </div>
+      </header>
+
       <UpgradeModel
         isOpen={showUpgradeModal}
         onClose={() => {
@@ -432,7 +374,7 @@ const EditorTopbar = ({ project }: { project: Project }) => {
         restrictedTool={restrictedTool || ""}
         reason="This tool is only available for Pro users."
       />
-    </TooltipProvider>
+    </>
   );
 };
 

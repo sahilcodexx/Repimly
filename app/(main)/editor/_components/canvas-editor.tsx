@@ -1,18 +1,19 @@
 "use client";
 import { useCanvas } from "@/context/context";
-import { api } from "@/convex/_generated/api";
-import { useConvexMutation } from "@/hooks/use-convex-query";
 import { Project } from "@/utils/types";
-import { use, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { Canvas, FabricImage } from "fabric";
 import { useGridSnap } from "./grid-overlay";
 import { Skeleton } from "@/components/ui/skeleton";
 
+const MIN_SCALE = 0.05;
 
 const CanvasEditor = ({ project }: { project: Project }) => {
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const fabricRef = useRef<Canvas | null>(null);
+  const initDoneRef = useRef(false);
 
   const {
     canvasEditor,
@@ -25,25 +26,44 @@ const CanvasEditor = ({ project }: { project: Project }) => {
 
   useGridSnap();
 
-
-
-  const calculateViewportScale = () => {
+  const calculateViewportScale = useCallback(() => {
     if (!containerRef.current || !project) return 1;
     const container = containerRef.current;
-    const containerWidth = container.clientWidth - 40;
-    const containerHeight = container.clientHeight - 40;
+    const containerWidth = container.clientWidth - 48;
+    const containerHeight = container.clientHeight - 48;
+
+    if (containerWidth <= 0 || containerHeight <= 0) return null;
+
     const scaleX = containerWidth / project.width;
     const scaleY = containerHeight / project.height;
-    return Math.min(scaleX, scaleY, 1);
-  };
+    return Math.max(Math.min(scaleX, scaleY, 1), MIN_SCALE);
+  }, [project]);
+
+  const applyScale = useCallback(
+    (canvas: Canvas, scale: number) => {
+      canvas.setDimensions(
+        {
+          width: project.width * scale,
+          height: project.height * scale,
+        },
+        { backstoreOnly: false },
+      );
+      canvas.setZoom(scale);
+      canvas.calcOffset();
+      canvas.requestRenderAll();
+    },
+    [project],
+  );
 
   useEffect(() => {
-    const initilizeCanvas = async () => {
+    let disposed = false;
+    initDoneRef.current = false;
+
+    const initializeCanvas = async () => {
+      if (!canvasRef.current || disposed) return;
       setIsLoading(true);
 
-      const viewportscale = calculateViewportScale();
-
-      const canvas = new Canvas(canvasRef.current!, {
+      const canvas = new Canvas(canvasRef.current, {
         width: project.width,
         height: project.height,
         backgroundColor: "#ffffff",
@@ -57,6 +77,9 @@ const CanvasEditor = ({ project }: { project: Project }) => {
         renderOnAddRemove: true,
         skipTargetFind: false,
       });
+
+      fabricRef.current = canvas;
+
       if (project.canvasState) {
         try {
           await canvas.loadFromJSON(project.canvasState);
@@ -66,16 +89,6 @@ const CanvasEditor = ({ project }: { project: Project }) => {
       }
 
       canvas.backgroundColor = "#ffffff";
-
-      canvas.setDimensions(
-        {
-          width: project.width * viewportscale,
-          height: project.height * viewportscale,
-        },
-        { backstoreOnly: false },
-      );
-
-      canvas.setZoom(viewportscale);
 
       if (
         (project.currentImageUrl || project.originalImageUrl) &&
@@ -90,7 +103,8 @@ const CanvasEditor = ({ project }: { project: Project }) => {
             const imageAspectRatio = fabricImage.width / fabricImage.height;
             const canvasAspectRatio = project.width / project.height;
 
-            let scaleX, scaleY;
+            let scaleX: number;
+            let scaleY: number;
 
             if (imageAspectRatio > canvasAspectRatio) {
               scaleX = project.width / fabricImage.width;
@@ -115,39 +129,69 @@ const CanvasEditor = ({ project }: { project: Project }) => {
           console.error("Error loading project image:", error);
         }
       }
-      canvas.calcOffset();
-      canvas.requestRenderAll();
-      setCanvasEditor(canvas);
+
+      if (disposed) {
+        canvas.dispose();
+        return;
+      }
+
+      const scale = calculateViewportScale() ?? 0.5;
+      applyScale(canvas, scale);
+
       import("fabric").then(({ Object: FabricObjectClass }) => {
         FabricObjectClass.prototype.set({
           transparentCorners: false,
-          cornerColor: "hsl(var(--primary))",
-          cornerStrokeColor: "hsl(var(--border))",
+          cornerColor: "#ffffff",
+          cornerStrokeColor: "#0d99ff",
           cornerSize: 8,
-          cornerStyle: "circle",
-          borderColor: "hsl(var(--primary) / 0.5)",
-          borderScaleFactor: 1.5,
-          padding: 4,
+          cornerStyle: "rect",
+          borderColor: "#0d99ff",
+          borderScaleFactor: 1,
+          padding: 0,
+          borderOpacityWhenMoving: 1,
         });
       });
+
+      setCanvasEditor(canvas);
+      initDoneRef.current = true;
       saveState();
-
-      setTimeout(() => {
-        window.dispatchEvent(new Event("resize"));
-      }, 500);
-
       setIsLoading(false);
+
+      requestAnimationFrame(() => {
+        if (disposed || !fabricRef.current) return;
+        const nextScale = calculateViewportScale();
+        if (nextScale) applyScale(fabricRef.current, nextScale);
+      });
     };
-    initilizeCanvas();
+
+    initializeCanvas();
 
     return () => {
-      if (canvasEditor) {
-        canvasEditor.dispose();
+      disposed = true;
+      initDoneRef.current = false;
+      if (fabricRef.current) {
+        fabricRef.current.dispose();
+        fabricRef.current = null;
       }
       setCanvasEditor(null);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [project._id]);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const observer = new ResizeObserver(() => {
+      const canvas = fabricRef.current;
+      if (!canvas || !initDoneRef.current) return;
+      const scale = calculateViewportScale();
+      if (scale) applyScale(canvas, scale);
+    });
+
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [calculateViewportScale, applyScale]);
 
   useEffect(() => {
     if (!canvasEditor) return;
@@ -157,7 +201,7 @@ const CanvasEditor = ({ project }: { project: Project }) => {
     };
 
     canvasEditor.on("object:modified", handleCanvasChange);
-    canvasEditor.on("object:added",handleCanvasChange)
+    canvasEditor.on("object:added", handleCanvasChange);
     canvasEditor.on("object:removed", handleCanvasChange);
 
     return () => {
@@ -168,27 +212,6 @@ const CanvasEditor = ({ project }: { project: Project }) => {
   }, [canvasEditor, saveState]);
 
   useEffect(() => {
-    const handleResize = () => {
-      if (!canvasEditor || !project) return;
-
-      const newScale = calculateViewportScale();
-      canvasEditor.setDimensions(
-        {
-          width: project.width * newScale,
-          height: project.height * newScale,
-        },
-        { backstoreOnly: false },
-      );
-      canvasEditor.setZoom(newScale);
-      canvasEditor.calcOffset();
-      canvasEditor.requestRenderAll();
-    };
-
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, [canvasEditor, project]);
-
-  useEffect(() => {
     if (!canvasEditor) return;
 
     switch (activeTool) {
@@ -196,7 +219,6 @@ const CanvasEditor = ({ project }: { project: Project }) => {
         canvasEditor.defaultCursor = "default";
         canvasEditor.hoverCursor = "crosshair";
         break;
-
       default:
         canvasEditor.defaultCursor = "default";
         canvasEditor.hoverCursor = "move";
@@ -218,43 +240,42 @@ const CanvasEditor = ({ project }: { project: Project }) => {
     return () => {
       canvasEditor.off("selection:created", handleSelection);
       canvasEditor.off("selection:updated", handleSelection);
-    }
+    };
   }, [canvasEditor, onToolChange]);
 
   return (
     <div
       ref={containerRef}
-      className="relative flex h-full w-full items-center justify-center overflow-hidden bg-muted/30"
+      className="relative flex h-full w-full items-center justify-center overflow-hidden bg-[#e5e5e5] dark:bg-[#1e1e1e]"
     >
       <div
-        className="pointer-events-none absolute inset-0 opacity-[0.03]"
+        className="pointer-events-none absolute inset-0 opacity-40 dark:opacity-20"
         style={{
-          backgroundImage: `
-            linear-gradient(45deg, currentColor 25%, transparent 25%),
-            linear-gradient(-45deg, currentColor 25%, transparent 25%),
-            linear-gradient(45deg, transparent 75%, currentColor 75%),
-            linear-gradient(-45deg, transparent 75%, currentColor 75%)`,
-          backgroundSize: "20px 20px",
-          backgroundPosition: "0 0, 0 10px, 10px -10px, -10px 0px",
+          backgroundImage: `radial-gradient(circle, #a3a3a3 0.6px, transparent 0.6px)`,
+          backgroundSize: "16px 16px",
         }}
       />
       {isLoading && (
-        <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/60 backdrop-blur-sm">
+        <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/40">
           <div className="flex flex-col items-center gap-3">
-            <Skeleton className="h-6 w-24" />
-            <Skeleton className="h-3 w-32" />
+            <Skeleton className="h-5 w-20" />
+            <Skeleton className="h-3 w-28" />
           </div>
         </div>
       )}
       <div
-        className="relative rounded-xl border border-border bg-white p-1 shadow-sm"
-        style={showGrid ? {
-          backgroundImage: `
-            linear-gradient(rgba(128,128,128,0.08) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(128,128,128,0.08) 1px, transparent 1px)
+        className="relative bg-white shadow-[0_0_0_1px_rgba(0,0,0,0.08),0_8px_24px_rgba(0,0,0,0.12)] dark:shadow-[0_0_0_1px_rgba(255,255,255,0.08),0_8px_24px_rgba(0,0,0,0.4)]"
+        style={
+          showGrid
+            ? {
+                backgroundImage: `
+            linear-gradient(rgba(13,153,255,0.12) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(13,153,255,0.12) 1px, transparent 1px)
           `,
-          backgroundSize: "20px 20px",
-        } : undefined}
+                backgroundSize: "20px 20px",
+              }
+            : undefined
+        }
       >
         <canvas id="canvas" ref={canvasRef} />
       </div>

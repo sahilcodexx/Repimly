@@ -226,11 +226,9 @@ const AdjustControl = () => {
 
   if (!canvasEditor) {
     return (
-      <div className="p-4">
-        <p className="text-sm text-muted-foreground">
-          Load an image to start adjusting
-        </p>
-      </div>
+      <p className="text-xs text-muted-foreground">
+        Load an image to start adjusting
+      </p>
     );
   }
 
@@ -244,27 +242,30 @@ const AdjustControl = () => {
         );
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h3 className="mb-3 text-sm font-medium text-foreground">Filter Presets</h3>
-        <div className="grid grid-cols-4 gap-2">
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+          Presets
+        </p>
+        <div className="grid grid-cols-4 gap-1">
           {PRESETS.map((preset) => {
             const Icon = preset.icon;
             const isActive = isPresetActive(preset);
             return (
               <button
                 key={preset.name}
+                type="button"
                 onClick={() => {
                   setFilterValues(preset.values);
                   applyFilters(preset.values);
                 }}
-                className={`flex cursor-pointer flex-col items-center gap-1 rounded-lg border p-2.5 transition-all ${
+                className={`flex cursor-pointer flex-col items-center gap-1 rounded-md p-2 transition-colors duration-100 ease-out active:scale-[0.97] ${
                   isActive
-                    ? "border-primary bg-primary/10 text-primary"
-                    : "border-border text-muted-foreground hover:border-foreground/30 hover:bg-muted/50"
+                    ? "bg-[#0d99ff]/10 text-[#0d99ff]"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
                 }`}
               >
-                <Icon className="h-5 w-5" />
+                <Icon className="size-4" />
                 <span className="text-[10px] font-medium">{preset.name}</span>
               </button>
             );
@@ -272,52 +273,51 @@ const AdjustControl = () => {
         </div>
       </div>
 
-      <div className="border-t border-border pt-4">
+      <div className="space-y-3 border-t border-border pt-3">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-medium text-foreground">Fine Tune</h3>
+          <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+            Fine tune
+          </p>
           <Button
             variant="ghost"
             size="sm"
             onClick={resetFilters}
-            className="h-7 gap-1 text-xs text-muted-foreground"
+            className="h-6 gap-1 px-1.5 text-[11px] text-muted-foreground"
           >
-            <RotateCcw className="h-3.5 w-3.5" />
+            <RotateCcw className="size-3" />
             Reset
           </Button>
         </div>
-      </div>
-      {FILTER_CONFIGS.map((config) => (
-        <div key={config.key} className="space-y-2">
-          <div className="flex items-center justify-between">
-            <label className="text-xs text-muted-foreground">{config.label}</label>
-            <span className="text-xs tabular-nums text-muted-foreground">
-              {filterValues[config.key]}
-              {config.suffix || ""}
-            </span>
+
+        {FILTER_CONFIGS.map((config) => (
+          <div key={config.key} className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label className="text-[11px] text-muted-foreground">
+                {config.label}
+              </label>
+              <span className="text-[11px] tabular-nums text-muted-foreground">
+                {filterValues[config.key]}
+                {config.suffix || ""}
+              </span>
+            </div>
+            <Slider
+              value={[filterValues[config.key]]}
+              onValueChange={(value) => handleValueChange(config.key, value)}
+              min={config.min}
+              max={config.max}
+              step={config.step}
+              className="w-full"
+            />
           </div>
-          <Slider
-            value={[filterValues[config.key]]}
-            onValueChange={(value) => handleValueChange(config.key, value)}
-            min={config.min}
-            max={config.max}
-            step={config.step}
-            className="w-full"
-          />
-        </div>
-      ))}
+        ))}
+      </div>
+
       {isApplying && (
-        <div className="flex items-center justify-center gap-2 py-2 text-xs text-muted-foreground">
-          <div className="h-3 w-3 animate-spin rounded-full border border-foreground/30 border-t-foreground/80" />
-          Applying filters...
+        <div className="flex items-center justify-center gap-2 py-1 text-[11px] text-muted-foreground">
+          <div className="size-3 animate-spin rounded-full border border-foreground/30 border-t-foreground/80" />
+          Applying…
         </div>
       )}
-      <div className="rounded-lg border border-border bg-muted/50 p-3 text-center">
-        <p className="text-xs text-muted-foreground">
-          Adjustments are applied in real-time. Use the{" "}
-          <span className="text-primary"> Reset button </span> to restore
-          original values.
-        </p>
-      </div>
     </div>
   );
 };

@@ -1,17 +1,18 @@
+"use client";
+
 import { useCanvas } from "@/context/context";
 import { Project, ToolConfig } from "@/utils/types";
-import { motion, AnimatePresence } from "motion/react";
-
+import { AnimatePresence, motion } from "motion/react";
 import {
   Crop,
   Expand,
-  Sliders,
-  Palette,
-  Maximize2,
-  Text,
   Eye,
   Layers,
+  Maximize2,
+  Palette,
   Shapes,
+  Sliders,
+  Text,
 } from "lucide-react";
 import AdjustControl from "./tools/Adjust";
 import { ResizeContent } from "./tools/Resize";
@@ -37,7 +38,7 @@ const TOOL_CONFIGS: Record<string, ToolConfig> = {
   adjust: {
     title: "Adjust",
     icon: Sliders,
-    description: "Brightness, contrast, and more (Manual saving required)",
+    description: "Brightness, contrast, and more",
   },
   background: {
     title: "Background",
@@ -45,67 +46,62 @@ const TOOL_CONFIGS: Record<string, ToolConfig> = {
     description: "Remove or change background",
   },
   ai_extender: {
-    title: "AI Image Extender",
+    title: "AI Extender",
     icon: Maximize2,
     description: "Extend image boundaries with AI",
   },
   text: {
-    title: "Add Text",
+    title: "Text",
     icon: Text,
-    description: "Customize in Various Fonts",
+    description: "Add and style text",
   },
   ai_edit: {
-    title: "AI Editing",
+    title: "AI Edit",
     icon: Eye,
     description: "Enhance image quality with AI",
   },
   layers: {
     title: "Layers",
     icon: Layers,
-    description: "Manage object layering and visibility",
+    description: "Manage layering and visibility",
   },
   shapes: {
     title: "Shapes",
     icon: Shapes,
-    description: "Add rectangles, circles, lines, and more",
+    description: "Add rectangles, circles, lines",
   },
 };
+
 const EditorSidebar = ({ project }: { project: Project }) => {
   const { activeTool } = useCanvas();
-
   const toolConfig = TOOL_CONFIGS[activeTool];
-  if (!toolConfig) {
-    return null;
-  }
 
-  const Icon = toolConfig.icon;
+  if (!toolConfig) return null;
+
   return (
-    <div className="flex w-80 min-w-80 flex-col border-r border-border bg-card/50 backdrop-blur-sm">
-      <div className="border-b border-border p-4">
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/10 text-primary">
-            <Icon className="h-3.5 w-3.5" />
-          </div>
-          <h2 className="text-sm font-semibold">{toolConfig.title}</h2>
-        </div>
-        <p className="mt-1.5 text-xs text-muted-foreground">{toolConfig.description}</p>
+    <aside className="flex w-60 shrink-0 flex-col border-l border-border bg-card">
+      <div className="flex h-10 shrink-0 items-center border-b border-border px-3">
+        <h2 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+          {toolConfig.title}
+        </h2>
       </div>
+
       <div className="scrollbar-thin flex-1 overflow-y-auto">
-        <div className="p-4">
+        <div className="p-3">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTool}
-              initial={{ opacity: 0, y: 8 }}
+              initial={{ opacity: 0, y: 4 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.15, ease: "easeOut" }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.12, ease: [0.23, 1, 0.32, 1] }}
             >
               {renderToolConfig(activeTool, project)}
             </motion.div>
           </AnimatePresence>
         </div>
       </div>
-    </div>
+    </aside>
   );
 };
 
@@ -132,6 +128,10 @@ const renderToolConfig = (activeTool: string, project: Project) => {
     case "shapes":
       return <ShapeControls />;
     default:
-      return <div>Select a Tool to get started</div>;
+      return (
+        <p className="text-xs text-muted-foreground">
+          Select a tool to get started
+        </p>
+      );
   }
 };
