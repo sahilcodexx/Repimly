@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { useCanvas } from "@/context/context";
 import { FilterConfig } from "@/utils/types";
-import { RotateCcw } from "lucide-react";
+import { RotateCcw, Sparkles, Skull, Mountain, Sunset, Snowflake, Flame, ImageOff } from "lucide-react";
 import { useParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
@@ -85,6 +85,22 @@ const DEFAULT_VALUES = FILTER_CONFIGS.reduce(
   },
   {} as Record<string, number>,
 );
+
+interface Preset {
+  name: string;
+  icon: React.ElementType;
+  values: Record<string, number>;
+}
+
+const PRESETS: Preset[] = [
+  { name: "Original", icon: ImageOff, values: DEFAULT_VALUES },
+  { name: "Vintage", icon: Sparkles, values: { brightness: 8, contrast: -12, saturation: -25, vibrance: 12, blur: 0, hue: 12 } },
+  { name: "Noir", icon: Skull, values: { brightness: -8, contrast: 45, saturation: -85, vibrance: -20, blur: 0, hue: 0 } },
+  { name: "Sepia", icon: Mountain, values: { brightness: 5, contrast: -8, saturation: -35, vibrance: 18, blur: 0, hue: 25 } },
+  { name: "Dramatic", icon: Sunset, values: { brightness: -18, contrast: 55, saturation: 12, vibrance: 25, blur: 0, hue: 0 } },
+  { name: "Cool", icon: Snowflake, values: { brightness: 5, contrast: -5, saturation: -12, vibrance: 8, blur: 0, hue: -25 } },
+  { name: "Warm", icon: Flame, values: { brightness: 8, contrast: -5, saturation: -8, vibrance: 10, blur: 0, hue: 25 } },
+];
 
 const AdjustControl = () => {
   const [filterValues, setFilterValues] = useState(DEFAULT_VALUES);
@@ -218,19 +234,57 @@ const AdjustControl = () => {
     );
   }
 
+  const isPresetActive = (preset: Preset) =>
+    preset.name === "Original"
+      ? Object.values(filterValues).every((v) => v === 0)
+      : PRESETS.every((p) =>
+          p.name === preset.name
+            ? Object.entries(p.values).every(([k, v]) => filterValues[k] === v)
+            : true,
+        );
+
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium text-foreground">Image Adjustments</h3>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={resetFilters}
-          className="h-7 gap-1 text-xs text-muted-foreground"
-        >
-          <RotateCcw className="h-3.5 w-3.5" />
-          Reset
-        </Button>
+      <div>
+        <h3 className="mb-3 text-sm font-medium text-foreground">Filter Presets</h3>
+        <div className="grid grid-cols-4 gap-2">
+          {PRESETS.map((preset) => {
+            const Icon = preset.icon;
+            const isActive = isPresetActive(preset);
+            return (
+              <button
+                key={preset.name}
+                onClick={() => {
+                  setFilterValues(preset.values);
+                  applyFilters(preset.values);
+                }}
+                className={`flex cursor-pointer flex-col items-center gap-1 rounded-lg border p-2.5 transition-all ${
+                  isActive
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border text-muted-foreground hover:border-foreground/30 hover:bg-muted/50"
+                }`}
+              >
+                <Icon className="h-5 w-5" />
+                <span className="text-[10px] font-medium">{preset.name}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="border-t border-border pt-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-medium text-foreground">Fine Tune</h3>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={resetFilters}
+            className="h-7 gap-1 text-xs text-muted-foreground"
+          >
+            <RotateCcw className="h-3.5 w-3.5" />
+            Reset
+          </Button>
+        </div>
       </div>
       {FILTER_CONFIGS.map((config) => (
         <div key={config.key} className="space-y-2">
