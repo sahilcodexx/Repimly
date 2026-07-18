@@ -3,7 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
-import { ZoomIn, ZoomOut, Maximize } from "lucide-react";
+import { ZoomIn, ZoomOut, Maximize, Grid3x3 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useCanvas } from "@/context/context";
 import { Project } from "@/utils/types";
 
@@ -11,7 +12,7 @@ const ZOOM_MIN = 10;
 const ZOOM_MAX = 500;
 
 export function ZoomControls({ project, containerRef }: { project: Project; containerRef: React.RefObject<HTMLDivElement | null> }) {
-  const { canvasEditor } = useCanvas();
+  const { canvasEditor, showGrid, setShowGrid } = useCanvas();
   const [zoom, setZoom] = useState(100);
   const isUpdatingRef = useRef(false);
 
@@ -104,6 +105,24 @@ export function ZoomControls({ project, containerRef }: { project: Project; cont
         <span className="w-12 text-center text-xs tabular-nums text-muted-foreground">
           {zoom}%
         </span>
+
+        <span className="h-4 w-px bg-border" />
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant={showGrid ? "default" : "ghost"}
+              size="icon"
+              className="h-7 w-7"
+              onClick={() => setShowGrid(!showGrid)}
+            >
+              <Grid3x3 className="h-3.5 w-3.5" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            {showGrid ? "Hide grid" : "Show grid"}
+          </TooltipContent>
+        </Tooltip>
 
         <span className="h-4 w-px bg-border" />
 

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { useCanvas } from "@/context/context";
 import {
@@ -12,8 +12,7 @@ import {
   Image as ImageIcon,
   Type,
   Square,
-  ArrowUp,
-  ArrowDown,
+  GripVertical,
   Layers,
 } from "lucide-react";
 import fabric from "fabric";
@@ -117,16 +116,31 @@ export function LayerPanel() {
     refreshLayers();
   };
 
-  const reorderLayer = (e: React.MouseEvent, layer: LayerItem, direction: "up" | "down") => {
-    e.stopPropagation();
-    if (!canvasEditor) return;
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDragIndex(index);
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", String(index));
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  };
+
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    if (dragIndex === null || dragIndex === dropIndex || !canvasEditor) return;
+
     const objects = canvasEditor.getObjects();
-    const idx = objects.indexOf(layer.object);
-    const target = direction === "up" ? idx + 1 : idx - 1;
-    if (target < 0 || target >= objects.length) return;
-    canvasEditor.moveTo(layer.object, target);
-    canvasEditor.requestRenderAll();
-    refreshLayers();
+    const obj = objects[dragIndex];
+    if (obj) {
+      canvasEditor.moveTo(obj, dropIndex);
+      canvasEditor.requestRenderAll();
+      refreshLayers();
+    }
+    setDragIndex(null);
   };
 
   const getTypeIcon = (type: string) => {
@@ -166,21 +180,30 @@ export function LayerPanel() {
           </div>
         ) : (
           <div className="space-y-1">
-            {layers.map((layer) => {
+            {layers.map((layer, index) => {
               const id = getObjectId(layer.object);
               const isSelected = selectedId === id;
               const idx = canvasEditor.getObjects().indexOf(layer.object);
+              const isDragging = dragIndex === idx;
 
               return (
                 <div
                   key={id}
+                  draggable={!layer.locked}
+                  onDragStart={(e) => handleDragStart(e, idx)}
+                  onDragOver={handleDragOver}
+                  onDrop={(e) => handleDrop(e, idx)}
                   onClick={() => selectLayer(layer)}
-                  className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2.5 transition-all ${
+                  className={`flex cursor-pointer items-center gap-2 rounded-lg border px-2 py-2.5 transition-all ${
                     isSelected
                       ? "border-primary bg-primary/10 shadow-xs"
                       : "border-border hover:border-foreground/20 hover:bg-muted/50"
-                  } ${layer.locked ? "opacity-50" : ""}`}
+                  } ${layer.locked ? "opacity-50" : ""} ${isDragging ? "opacity-40" : ""}`}
                 >
+                  <div className="cursor-grab text-muted-foreground/40 hover:text-muted-foreground">
+                    <GripVertical className="h-3.5 w-3.5" />
+                  </div>
+
                   <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
                     {getTypeIcon(layer.type)}
                   </div>
@@ -192,23 +215,6 @@ export function LayerPanel() {
                     <p className="text-[10px] text-muted-foreground">
                       {idx + 1} &middot; {layer.type === "i-text" ? "Text" : layer.type}
                     </p>
-                  </div>
-
-                  <div className="flex shrink-0 items-center gap-0.5">
-                    <button
-                      onClick={(e) => reorderLayer(e, layer, "up")}
-                      disabled={idx === canvasEditor.getObjects().length - 1}
-                      className="rounded p-0.5 text-muted-foreground/60 hover:text-foreground disabled:opacity-20"
-                    >
-                      <ArrowUp className="h-3 w-3" />
-                    </button>
-                    <button
-                      onClick={(e) => reorderLayer(e, layer, "down")}
-                      disabled={idx === 0}
-                      className="rounded p-0.5 text-muted-foreground/60 hover:text-foreground disabled:opacity-20"
-                    >
-                      <ArrowDown className="h-3 w-3" />
-                    </button>
                   </div>
 
                   <div className="flex shrink-0 items-center gap-0.5">

@@ -5,6 +5,8 @@ import { useConvexMutation } from "@/hooks/use-convex-query";
 import { Project } from "@/utils/types";
 import { use, useEffect, useRef, useState } from "react";
 import { Canvas, FabricImage } from "fabric";
+import { GridOverlay } from "./grid-overlay";
+import { Skeleton } from "@/components/ui/skeleton";
 
 
 const CanvasEditor = ({ project }: { project: Project }) => {
@@ -113,6 +115,18 @@ const CanvasEditor = ({ project }: { project: Project }) => {
       canvas.calcOffset();
       canvas.requestRenderAll();
       setCanvasEditor(canvas);
+      import("fabric").then(({ Object: FabricObjectClass }) => {
+        FabricObjectClass.prototype.set({
+          transparentCorners: false,
+          cornerColor: "hsl(var(--primary))",
+          cornerStrokeColor: "hsl(var(--border))",
+          cornerSize: 8,
+          cornerStyle: "circle",
+          borderColor: "hsl(var(--primary) / 0.5)",
+          borderScaleFactor: 1.5,
+          padding: 4,
+        });
+      });
       saveState();
 
       setTimeout(() => {
@@ -223,13 +237,14 @@ const CanvasEditor = ({ project }: { project: Project }) => {
       />
       {isLoading && (
         <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/60 backdrop-blur-sm">
-          <div className="flex flex-col items-center gap-4">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-foreground/30 border-t-foreground" />
-            <p className="text-sm text-muted-foreground">Loading Canvas</p>
+          <div className="flex flex-col items-center gap-3">
+            <Skeleton className="h-6 w-24" />
+            <Skeleton className="h-3 w-32" />
           </div>
         </div>
       )}
-      <div className="rounded-xl border border-border bg-white p-1 shadow-sm">
+      <div className="relative rounded-xl border border-border bg-white p-1 shadow-sm">
+        <GridOverlay />
         <canvas id="canvas" ref={canvasRef} />
       </div>
     </div>

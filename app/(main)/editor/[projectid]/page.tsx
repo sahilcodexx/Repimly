@@ -2,7 +2,8 @@
 import { CanvasContext } from "@/context/context";
 import { api } from "@/convex/_generated/api";
 import { useConvexQuery, useConvexMutation } from "@/hooks/use-convex-query";
-import { Loader2, Monitor } from "lucide-react";
+import { Monitor } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useParams } from "next/navigation";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { HashLoader } from "react-spinners";
@@ -13,6 +14,8 @@ import EditorTopbar from "../_components/editor-topbar";
 import { FabricImage } from "fabric";
 import EditorSidebar from "../_components/editor-sidebar";
 import { useKeyboardShortcuts } from "../_components/use-keyboard-shortcuts";
+import { CanvasContextMenu } from "../_components/canvas-context-menu";
+import { toast } from "sonner";
 
 const Editor = () => {
   const { projectid } = useParams();
@@ -22,6 +25,7 @@ const Editor = () => {
   );
   const canvasAreaRef = useRef<HTMLDivElement>(null);
   const [activeTool, setActiveTool] = useState<string>("resize");
+  const [showGrid, setShowGrid] = useState(false);
   const [history, setHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState<number>(-1);
   const isRestoring = useRef(false);
@@ -77,27 +81,24 @@ const Editor = () => {
     }
   };
 
+  const lastSavedRef = useRef<string | null>(null);
+
   useEffect(() => {
-    if (!project) return;
-    let saveTimeout: NodeJS.Timeout;
+    if (!project || historyIndex < 0) return;
 
-    const autoSave = () => {
-      if (history.length > 0) {
-        clearTimeout(saveTimeout);
-        saveTimeout = setTimeout(() => {
-          const currentCanvasState = history[historyIndex];
-          updateProject({
-            projectId: project._id,
-            canvasState: JSON.parse(currentCanvasState),
-          });
-        }, 2000);
-      }
-    };
+    const currentState = history[historyIndex];
+    if (currentState === lastSavedRef.current) return;
 
-    autoSave();
+    const timer = setTimeout(() => {
+      updateProject({
+        projectId: project._id,
+        canvasState: JSON.parse(currentState),
+      });
+      lastSavedRef.current = currentState;
+    }, 2000);
 
-    return () => clearTimeout(saveTimeout);
-  }, [history, historyIndex, project, updateProject]);
+    return () => clearTimeout(timer);
+  }, [historyIndex, project, updateProject]);
 
   const reset = async () => {
     if (canvasEditor && project?.originalImageUrl) {
@@ -144,10 +145,11 @@ const Editor = () => {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4">
-        <div className="flex items-center gap-3 text-muted-foreground">
-          <Loader2 size={20} className="animate-spin" />
-          <p className="text-sm">Loading project...</p>
+      <div className="flex min-h-screen flex-col gap-4 bg-background p-8">
+        <Skeleton className="h-8 w-48" />
+        <div className="flex gap-4 flex-1">
+          <Skeleton className="h-full w-[280px]" />
+          <Skeleton className="h-full flex-1" />
         </div>
       </div>
     );
@@ -189,9 +191,12 @@ const Editor = () => {
         reset,
         saveState,
         isSaving,
+        showGrid,
+        setShowGrid,
       }}
     >
       <KeyboardShortcuts project={projectWithId} />
+      <CanvasContextMenu />
       <div className="flex min-h-screen items-center justify-center text-center lg:hidden">
         <div className="max-w-sm px-4">
           <Monitor className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />

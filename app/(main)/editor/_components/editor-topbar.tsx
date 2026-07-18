@@ -2,6 +2,7 @@
 import UpgradeModel from "@/components/common/upgrade-model";
 import { ModeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { useCanvas } from "@/context/context";
 import { api } from "@/convex/_generated/api";
 
@@ -252,19 +253,24 @@ const EditorTopbar = ({ project }: { project: Project }) => {
   };
 
   return (
-    <>
+    <TooltipProvider delayDuration={400}>
       <div className="supports-[backdrop-filter]:bg-background/80 sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-xl">
         <div className="grid grid-cols-3 items-center gap-4 px-4 py-2.5">
           <div className="flex items-center gap-3 justify-self-start">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleBackToDashboard}
-              className="gap-1.5 text-muted-foreground"
-            >
-              <ArrowLeft size={16} />
-              All Projects
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleBackToDashboard}
+                  className="gap-1.5 text-muted-foreground"
+                >
+                  <ArrowLeft size={16} />
+                  All Projects
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Back to dashboard</TooltipContent>
+            </Tooltip>
             <span className="h-4 w-px bg-border" />
             <h2 className="text-sm font-medium capitalize text-foreground">{project.title}</h2>
           </div>
@@ -276,69 +282,93 @@ const EditorTopbar = ({ project }: { project: Project }) => {
                 const isActive = activeTool === tools.id;
                 const hasToolAccess = hasAccess(tools.id);
                 return (
-                  <Button
-                    key={tools.id}
-                    variant={isActive ? "default" : "ghost"}
-                    size="sm"
-                    className={`relative gap-1.5 text-xs ${!hasToolAccess ? "opacity-50" : ""} ${isActive ? "shadow-xs" : ""}`}
-                    onClick={() => handleToolChange(tools.id)}
-                  >
-                    <Icon size={14} />
-                    {tools.label}
-                    {tools.proOnly && !hasToolAccess && <Lock size={10} />}
-                  </Button>
+                  <Tooltip key={tools.id}>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant={isActive ? "default" : "ghost"}
+                        size="sm"
+                        className={`relative gap-1.5 text-xs ${!hasToolAccess ? "opacity-50" : ""} ${isActive ? "shadow-xs" : ""}`}
+                        onClick={() => handleToolChange(tools.id)}
+                      >
+                        <Icon size={14} />
+                        {tools.label}
+                        {tools.proOnly && !hasToolAccess && <Lock size={10} />}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>{tools.label} tool</TooltipContent>
+                  </Tooltip>
                 );
               })}
             </div>
           </div>
 
           <div className="flex items-center gap-2 justify-self-end">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={undo}
-              disabled={!canUndo}
-              className="h-8 w-8 text-muted-foreground"
-            >
-              <RotateCcw size={14} />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={redo}
-              disabled={!canRedo}
-              className="h-8 w-8 text-muted-foreground"
-            >
-              <RotateCw size={14} />
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={undo}
+                  disabled={!canUndo}
+                  className="h-8 w-8 text-muted-foreground"
+                >
+                  <RotateCcw size={14} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Undo <kbd className="ml-1 rounded border border-border px-1 text-[10px]">⌘Z</kbd></TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={redo}
+                  disabled={!canRedo}
+                  className="h-8 w-8 text-muted-foreground"
+                >
+                  <RotateCw size={14} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Redo <kbd className="ml-1 rounded border border-border px-1 text-[10px]">⌘⇧Z</kbd></TooltipContent>
+            </Tooltip>
 
             <span className="h-4 w-px bg-border" />
 
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={reset}
-              disabled={isSaving || !project.originalImageUrl}
-              className="gap-1.5 text-xs"
-            >
-              <RefreshCcw size={14} />
-              Reset
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={reset}
+                  disabled={isSaving || !project.originalImageUrl}
+                  className="gap-1.5 text-xs"
+                >
+                  <RefreshCcw size={14} />
+                  Reset
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Reset to original image</TooltipContent>
+            </Tooltip>
 
-            <Button
-              variant="default"
-              size="sm"
-              onClick={handleManualSave}
-              disabled={isSaving || !canvasEditor}
-              className="w-[82px] gap-1.5 text-xs"
-            >
-              {isSaving ? (
-                <Loader2 size={14} className="animate-spin" />
-              ) : (
-                <Save size={14} />
-              )}
-              <span>{isSaving ? "Saving" : "Save"}</span>
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={handleManualSave}
+                  disabled={isSaving || !canvasEditor}
+                  className="w-[82px] gap-1.5 text-xs"
+                >
+                  {isSaving ? (
+                    <Loader2 size={14} className="animate-spin" />
+                  ) : (
+                    <Save size={14} />
+                  )}
+                  <span>{isSaving ? "Saving" : "Save"}</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Save <kbd className="ml-1 rounded border border-border px-1 text-[10px]">⌘S</kbd></TooltipContent>
+            </Tooltip>
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -400,7 +430,7 @@ const EditorTopbar = ({ project }: { project: Project }) => {
         restrictedTool={restrictedTool || ""}
         reason="This tool is only available for Pro users."
       />
-    </>
+    </TooltipProvider>
   );
 };
 

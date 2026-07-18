@@ -71,6 +71,8 @@ export type CanvasContextType = {
   reset: () => void;
   saveState: () => void;
   isSaving: boolean;
+  showGrid: boolean;
+  setShowGrid: Dispatch<SetStateAction<boolean>>;
 };
 
 export interface ToolConfig {

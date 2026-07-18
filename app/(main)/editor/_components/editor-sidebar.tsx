@@ -1,5 +1,6 @@
 import { useCanvas } from "@/context/context";
 import { Project, ToolConfig } from "@/utils/types";
+import { motion, AnimatePresence } from "motion/react";
 
 import {
   Crop,
@@ -91,7 +92,17 @@ const EditorSidebar = ({ project }: { project: Project }) => {
       </div>
       <div className="scrollbar-thin flex-1 overflow-y-auto">
         <div className="p-4">
-          {renderToolConfig(activeTool, project)}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTool}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.15, ease: "easeOut" }}
+            >
+              {renderToolConfig(activeTool, project)}
+            </motion.div>
+          </AnimatePresence>
         </div>
       </div>
     </div>

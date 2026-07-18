@@ -11,6 +11,7 @@ import {
   Minus,
   ArrowUpRight,
   MousePointerClick,
+  Ban,
 } from "lucide-react";
 import { useCanvas } from "@/context/context";
 import { Rect, Circle as FabricCircle, Triangle as FabricTriangle, Ellipse, Line, Group, type FabricObject } from "fabric";
@@ -36,6 +37,8 @@ export function ShapeControls() {
   const { canvasEditor } = useCanvas();
   const [shapeType, setShapeType] = useState<ShapeType>("rect");
   const [fillColor, setFillColor] = useState(DEFAULTS.fill);
+  const [noFill, setNoFill] = useState(false);
+  const [cornerRadius, setCornerRadius] = useState(4);
   const [strokeColor, setStrokeColor] = useState(DEFAULTS.stroke);
   const [strokeWidth, setStrokeWidth] = useState(DEFAULTS.strokeWidth);
 
@@ -51,7 +54,7 @@ export function ShapeControls() {
     if (!canvasEditor) return;
     const center = getCanvasCenter();
     const commonProps = {
-      fill: fillColor,
+      fill: noFill ? "transparent" : fillColor,
       stroke: strokeColor,
       strokeWidth,
       selectable: true,
@@ -66,7 +69,7 @@ export function ShapeControls() {
 
     switch (shapeType) {
       case "rect":
-        shape = new Rect({ ...commonProps, width: 120, height: 80, rx: 4, ry: 4 });
+        shape = new Rect({ ...commonProps, width: 120, height: 80, rx: cornerRadius, ry: cornerRadius });
         break;
       case "circle":
         shape = new FabricCircle({ ...commonProps, radius: 50 });
@@ -159,19 +162,34 @@ export function ShapeControls() {
         <h3 className="text-sm font-medium text-foreground">Style</h3>
 
         <div className="space-y-2">
-          <label className="text-xs text-muted-foreground">Fill Color</label>
+          <div className="flex items-center justify-between">
+            <label className="text-xs text-muted-foreground">Fill Color</label>
+            <button
+              onClick={() => setNoFill(!noFill)}
+              className={`flex cursor-pointer items-center gap-1 rounded-md border px-2 py-1 text-[10px] transition-all ${
+                noFill
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border text-muted-foreground hover:border-foreground/30"
+              }`}
+            >
+              <Ban className="h-3 w-3" />
+              No Fill
+            </button>
+          </div>
           <div className="flex items-center gap-2">
             <input
               type="color"
               value={fillColor}
-              onChange={(e) => setFillColor(e.target.value)}
-              className="h-9 w-9 cursor-pointer rounded-md border border-border bg-transparent"
+              onChange={(e) => { setFillColor(e.target.value); setNoFill(false); }}
+              className="h-9 w-9 cursor-pointer rounded-md border border-border bg-transparent disabled:opacity-30"
+              disabled={noFill}
             />
             <Input
-              value={fillColor}
-              onChange={(e) => setFillColor(e.target.value)}
+              value={noFill ? "transparent" : fillColor}
+              onChange={(e) => { setFillColor(e.target.value); setNoFill(false); }}
               placeholder="#4f46e5"
               className="flex-1"
+              disabled={noFill}
             />
           </div>
         </div>
@@ -211,6 +229,25 @@ export function ShapeControls() {
           />
         </div>
       </div>
+
+        {shapeType === "rect" && (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-xs text-muted-foreground">Corner Radius</label>
+              <span className="text-xs tabular-nums text-muted-foreground">
+                {cornerRadius}px
+              </span>
+            </div>
+            <Slider
+              value={[cornerRadius]}
+              onValueChange={([v]) => setCornerRadius(v)}
+              min={0}
+              max={40}
+              step={1}
+              className="w-full"
+            />
+          </div>
+        )}
 
       <Button onClick={createShape} className="w-full gap-2" variant="default">
         <MousePointerClick className="h-4 w-4" />
