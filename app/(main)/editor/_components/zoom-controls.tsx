@@ -72,7 +72,7 @@ export function ZoomControls({ project, containerRef }: { project: Project; cont
 
   return (
     <div className="fixed bottom-6 left-1/2 z-30" style={{ transform: "translateX(calc(-50% + 160px))" }}>
-      <div className="flex items-center gap-2 rounded-md border border-border bg-card/90 px-3 py-2 shadow-sm backdrop-blur-md">
+      <div className="flex items-center gap-2 rounded-xl border border-border bg-card/90 px-3 py-2 shadow-sm backdrop-blur-md">
         <Button
           variant="ghost"
           size="icon"

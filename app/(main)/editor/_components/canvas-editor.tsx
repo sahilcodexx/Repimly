@@ -247,7 +247,7 @@ const CanvasEditor = ({ project }: { project: Project }) => {
         </div>
       )}
       <div
-        className="relative rounded-lg border border-border bg-white p-1 shadow-sm"
+        className="relative rounded-xl border border-border bg-white p-1 shadow-sm"
         style={showGrid ? {
           backgroundImage: `
             linear-gradient(rgba(128,128,128,0.08) 1px, transparent 1px),

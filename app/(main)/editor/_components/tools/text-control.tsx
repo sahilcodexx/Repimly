@@ -271,7 +271,7 @@ export function TextControls() {
                 type="color"
                 value={textColor}
                 onChange={(e) => applyTextColor(e.target.value)}
-                className="h-10 w-10 cursor-pointer rounded-sm border border-border bg-transparent"
+                className="h-10 w-10 cursor-pointer rounded-md border border-border bg-transparent"
                 aria-label="Text color"
               />
               <Input
@@ -331,7 +331,7 @@ export function TextControls() {
         </div>
       )}
 
-      <div className="rounded-md border border-border bg-muted/50 p-3">
+      <div className="rounded-lg border border-border bg-muted/50 p-3">
         <p className="text-xs text-muted-foreground">
           <strong className="text-foreground">Double-click</strong> any text to edit it directly on canvas.
           <br />

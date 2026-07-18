@@ -276,7 +276,7 @@ const EditorTopbar = ({ project }: { project: Project }) => {
           </div>
 
             <div className="flex justify-center">
-            <div className="flex items-center gap-1 rounded-md border border-border bg-muted/50 p-0.5">
+            <div className="flex items-center gap-1 rounded-lg border border-border bg-muted/50 p-0.5">
               {TOOLS.map((tools) => {
                 const Icon = tools.icon;
                 const isActive = activeTool === tools.id;

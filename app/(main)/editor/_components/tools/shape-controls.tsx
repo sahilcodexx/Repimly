@@ -28,8 +28,8 @@ const SHAPE_TYPES = [
 type ShapeType = (typeof SHAPE_TYPES)[number]["id"];
 
 const DEFAULTS = {
-  fill: "#6366f1",
-  stroke: "#171717",
+  fill: "#4f46e5",
+  stroke: "#000000",
   strokeWidth: 2,
 };
 
@@ -146,15 +146,15 @@ export function ShapeControls() {
                 key={id}
                 onClick={() => setShapeType(id)}
                 aria-label={`${label} shape`}
-                className={`flex cursor-pointer flex-col items-center gap-1 rounded-md border p-3 transition-all ${
+                className={`flex cursor-pointer flex-col items-center gap-1 rounded-lg border p-3 transition-all ${
                   shapeType === id
                     ? "border-primary bg-primary/10 text-primary"
                     : "border-border text-muted-foreground hover:border-foreground/30 hover:bg-muted/50"
                 }`}
               >
-              <Icon className="h-5 w-5" />
-              <span className="text-[10px] font-medium">{label}</span>
-            </button>
+                <Icon className="h-5 w-5" />
+                <span className="text-[10px] font-medium">{label}</span>
+              </button>
           ))}
         </div>
       </div>
@@ -168,7 +168,7 @@ export function ShapeControls() {
             <button
               onClick={() => setNoFill(!noFill)}
               aria-label={noFill ? "Enable fill" : "Disable fill"}
-              className={`flex cursor-pointer items-center gap-1 rounded-sm border px-2 py-1 text-[10px] transition-all ${
+              className={`flex cursor-pointer items-center gap-1 rounded-md border px-2 py-1 text-[10px] transition-all ${
                 noFill
                   ? "border-primary bg-primary/10 text-primary"
                   : "border-border text-muted-foreground hover:border-foreground/30"
@@ -183,7 +183,7 @@ export function ShapeControls() {
               type="color"
               value={fillColor}
               onChange={(e) => { setFillColor(e.target.value); setNoFill(false); }}
-              className="h-9 w-9 cursor-pointer rounded-sm border border-border bg-transparent disabled:opacity-30"
+              className="h-9 w-9 cursor-pointer rounded-md border border-border bg-transparent disabled:opacity-30"
               disabled={noFill}
               aria-label="Fill color"
             />
@@ -204,7 +204,7 @@ export function ShapeControls() {
               type="color"
               value={strokeColor}
               onChange={(e) => setStrokeColor(e.target.value)}
-              className="h-9 w-9 cursor-pointer rounded-sm border border-border bg-transparent"
+              className="h-9 w-9 cursor-pointer rounded-md border border-border bg-transparent"
               aria-label="Stroke color"
             />
             <Input
@@ -258,7 +258,7 @@ export function ShapeControls() {
         Add {SHAPE_TYPES.find((s) => s.id === shapeType)?.label}
       </Button>
 
-      <div className="rounded-md border border-border bg-muted/50 p-3">
+      <div className="rounded-lg border border-border bg-muted/50 p-3">
         <p className="text-xs text-muted-foreground">
           Customize your shape below, then click to add it to the canvas.
           Shapes can be resized and rotated after placement.
