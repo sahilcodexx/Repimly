@@ -7,6 +7,7 @@ import { useParams } from "next/navigation";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { HashLoader } from "react-spinners";
 import CanvasEditor from "../_components/canvas-editor";
+import { ZoomControls } from "../_components/zoom-controls";
 import { Project } from "@/utils/types";
 import EditorTopbar from "../_components/editor-topbar";
 import { FabricImage } from "fabric";
@@ -19,6 +20,7 @@ const Editor = () => {
   const [processingMessage, setProcessingMessage] = useState<string | null>(
     null,
   );
+  const canvasAreaRef = useRef<HTMLDivElement>(null);
   const [activeTool, setActiveTool] = useState<string>("resize");
   const [history, setHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState<number>(-1);
@@ -218,8 +220,9 @@ const Editor = () => {
         <EditorTopbar project={projectWithId!} />
         <div className="flex h-[calc(100vh-3.5rem)] overflow-hidden">
           <EditorSidebar project={projectWithId!} />
-          <div className="flex-1 bg-muted/30">
+          <div ref={canvasAreaRef} className="flex-1 bg-muted/30">
             <CanvasEditor project={projectWithId!} />
+            <ZoomControls project={projectWithId!} containerRef={canvasAreaRef} />
           </div>
         </div>
       </div>

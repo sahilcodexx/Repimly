@@ -5,7 +5,7 @@ import { useConvexMutation } from "@/hooks/use-convex-query";
 import { Project } from "@/utils/types";
 import { use, useEffect, useRef, useState } from "react";
 import { Canvas, FabricImage } from "fabric";
-import { ZoomControls } from "./zoom-controls";
+
 
 const CanvasEditor = ({ project }: { project: Project }) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -232,7 +232,6 @@ const CanvasEditor = ({ project }: { project: Project }) => {
       <div className="rounded-xl border border-border bg-white p-1 shadow-sm">
         <canvas id="canvas" ref={canvasRef} />
       </div>
-      <ZoomControls project={project} containerRef={containerRef} />
     </div>
   );
 };

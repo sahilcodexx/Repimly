@@ -24,7 +24,7 @@ export function ZoomControls({ project, containerRef }: { project: Project; cont
   }, [containerRef, project]);
 
   const applyZoom = useCallback((percent: number) => {
-    if (!canvasEditor || isUpdatingRef.current) return;
+    if (!canvasEditor) return;
     const value = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, percent)) / 100;
     canvasEditor.setDimensions(
       { width: project.width * value, height: project.height * value },
@@ -70,7 +70,7 @@ export function ZoomControls({ project, containerRef }: { project: Project; cont
   };
 
   return (
-    <div className="absolute bottom-4 left-1/2 z-20 -translate-x-1/2">
+    <div className="fixed bottom-6 left-1/2 z-30" style={{ transform: "translateX(calc(-50% + 160px))" }}>
       <div className="flex items-center gap-2 rounded-xl border border-border bg-card/90 px-3 py-2 shadow-sm backdrop-blur-md">
         <Button
           variant="ghost"
