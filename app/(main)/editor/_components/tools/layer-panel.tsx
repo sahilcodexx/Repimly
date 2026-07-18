@@ -194,7 +194,7 @@ export function LayerPanel() {
                   onDragOver={handleDragOver}
                   onDrop={(e) => handleDrop(e, idx)}
                   onClick={() => selectLayer(layer)}
-                  className={`flex cursor-pointer items-center gap-2 rounded-lg border px-2 py-2.5 transition-all ${
+                  className={`flex cursor-pointer items-center gap-2 rounded-md border px-2 py-2.5 transition-all ${
                     isSelected
                       ? "border-primary bg-primary/10 shadow-xs"
                       : "border-border hover:border-foreground/20 hover:bg-muted/50"
@@ -220,22 +220,22 @@ export function LayerPanel() {
                   <div className="flex shrink-0 items-center gap-0.5">
                     <button
                       onClick={(e) => toggleVisibility(e, layer)}
-                      className="rounded p-1 text-muted-foreground/60 hover:text-foreground"
-                      title={layer.visible ? "Hide" : "Show"}
+                      className="rounded-sm p-1 text-muted-foreground/60 hover:text-foreground"
+                      aria-label={layer.visible ? "Hide layer" : "Show layer"}
                     >
                       {layer.visible ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
                     </button>
                     <button
                       onClick={(e) => toggleLock(e, layer)}
-                      className="rounded p-1 text-muted-foreground/60 hover:text-foreground"
-                      title={layer.locked ? "Unlock" : "Lock"}
+                      className="rounded-sm p-1 text-muted-foreground/60 hover:text-foreground"
+                      aria-label={layer.locked ? "Unlock layer" : "Lock layer"}
                     >
                       {layer.locked ? <Lock className="h-3.5 w-3.5" /> : <Unlock className="h-3.5 w-3.5" />}
                     </button>
                     <button
                       onClick={(e) => deleteLayer(e, layer)}
-                      className="rounded p-1 text-muted-foreground/60 hover:text-destructive"
-                      title="Delete"
+                      className="rounded-sm p-1 text-muted-foreground/60 hover:text-destructive"
+                      aria-label="Delete layer"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>

@@ -256,6 +256,7 @@ export function TextControls() {
                   variant={textAlign === align ? "default" : "outline"}
                   size="sm"
                   className="p-2"
+                  aria-label={`Align ${align}`}
                 >
                   <Icon className="h-4 w-4" />
                 </Button>
@@ -270,7 +271,8 @@ export function TextControls() {
                 type="color"
                 value={textColor}
                 onChange={(e) => applyTextColor(e.target.value)}
-                className="h-10 w-10 cursor-pointer rounded-md border border-border bg-transparent"
+                className="h-10 w-10 cursor-pointer rounded-sm border border-border bg-transparent"
+                aria-label="Text color"
               />
               <Input
                 value={textColor}
@@ -291,6 +293,7 @@ export function TextControls() {
                 }
                 size="sm"
                 className="flex-1"
+                aria-label="Toggle bold"
               >
                 <Bold className="h-4 w-4" />
               </Button>
@@ -301,6 +304,7 @@ export function TextControls() {
                 }
                 size="sm"
                 className="flex-1"
+                aria-label="Toggle italic"
               >
                 <Italic className="h-4 w-4" />
               </Button>
@@ -309,6 +313,7 @@ export function TextControls() {
                 variant={selectedText.underline ? "default" : "outline"}
                 size="sm"
                 className="flex-1"
+                aria-label="Toggle underline"
               >
                 <Underline className="h-4 w-4" />
               </Button>
@@ -326,7 +331,7 @@ export function TextControls() {
         </div>
       )}
 
-      <div className="rounded-lg border border-border bg-muted/50 p-3">
+      <div className="rounded-md border border-border bg-muted/50 p-3">
         <p className="text-xs text-muted-foreground">
           <strong className="text-foreground">Double-click</strong> any text to edit it directly on canvas.
           <br />

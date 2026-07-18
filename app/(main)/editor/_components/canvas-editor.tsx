@@ -5,7 +5,7 @@ import { useConvexMutation } from "@/hooks/use-convex-query";
 import { Project } from "@/utils/types";
 import { use, useEffect, useRef, useState } from "react";
 import { Canvas, FabricImage } from "fabric";
-import { GridOverlay } from "./grid-overlay";
+import { useGridSnap } from "./grid-overlay";
 import { Skeleton } from "@/components/ui/skeleton";
 
 
@@ -20,7 +20,10 @@ const CanvasEditor = ({ project }: { project: Project }) => {
     activeTool,
     onToolChange,
     saveState,
+    showGrid,
   } = useCanvas();
+
+  useGridSnap();
 
 
 
@@ -243,8 +246,16 @@ const CanvasEditor = ({ project }: { project: Project }) => {
           </div>
         </div>
       )}
-      <div className="relative rounded-xl border border-border bg-white p-1 shadow-sm">
-        <GridOverlay />
+      <div
+        className="relative rounded-lg border border-border bg-white p-1 shadow-sm"
+        style={showGrid ? {
+          backgroundImage: `
+            linear-gradient(rgba(128,128,128,0.08) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(128,128,128,0.08) 1px, transparent 1px)
+          `,
+          backgroundSize: "20px 20px",
+        } : undefined}
+      >
         <canvas id="canvas" ref={canvasRef} />
       </div>
     </div>

@@ -132,7 +132,7 @@ export function CanvasContextMenu() {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.1 }}
-            className="fixed z-50 min-w-44 overflow-hidden rounded-xl border border-border bg-popover p-1 shadow-xl"
+            className="fixed z-50 min-w-44 overflow-hidden rounded-lg border border-border bg-popover p-1 shadow-sm"
             style={{ left: menu.x, top: menu.y }}
           >
             {menu.items.map((item) => (

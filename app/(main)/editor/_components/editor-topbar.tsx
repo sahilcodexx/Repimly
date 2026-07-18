@@ -275,8 +275,8 @@ const EditorTopbar = ({ project }: { project: Project }) => {
             <h2 className="text-sm font-medium capitalize text-foreground">{project.title}</h2>
           </div>
 
-          <div className="flex justify-center">
-            <div className="flex items-center gap-1 rounded-lg border border-border bg-muted/50 p-0.5">
+            <div className="flex justify-center">
+            <div className="flex items-center gap-1 rounded-md border border-border bg-muted/50 p-0.5">
               {TOOLS.map((tools) => {
                 const Icon = tools.icon;
                 const isActive = activeTool === tools.id;
@@ -311,6 +311,7 @@ const EditorTopbar = ({ project }: { project: Project }) => {
                   onClick={undo}
                   disabled={!canUndo}
                   className="h-8 w-8 text-muted-foreground"
+                  aria-label="Undo"
                 >
                   <RotateCcw size={14} />
                 </Button>
@@ -325,6 +326,7 @@ const EditorTopbar = ({ project }: { project: Project }) => {
                   onClick={redo}
                   disabled={!canRedo}
                   className="h-8 w-8 text-muted-foreground"
+                  aria-label="Redo"
                 >
                   <RotateCw size={14} />
                 </Button>

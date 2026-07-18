@@ -15,6 +15,7 @@ import { FabricImage } from "fabric";
 import EditorSidebar from "../_components/editor-sidebar";
 import { useKeyboardShortcuts } from "../_components/use-keyboard-shortcuts";
 import { CanvasContextMenu } from "../_components/canvas-context-menu";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 
 const Editor = () => {
@@ -195,6 +196,7 @@ const Editor = () => {
         setShowGrid,
       }}
     >
+      <TooltipProvider delayDuration={0}>
       <KeyboardShortcuts project={projectWithId} />
       <CanvasContextMenu />
       <div className="flex min-h-screen items-center justify-center text-center lg:hidden">
@@ -206,7 +208,7 @@ const Editor = () => {
           </p>
         </div>
       </div>
-      <div className="hidden min-h-screen lg:block bg-background">
+      <div className="hidden min-h-dvh lg:block bg-background">
         {processingMessage && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
             <div className="flex flex-col items-center gap-4 rounded-2xl border border-border bg-card p-8 shadow-2xl">
@@ -231,6 +233,7 @@ const Editor = () => {
           </div>
         </div>
       </div>
+      </TooltipProvider>
     </CanvasContext.Provider>
   );
 };

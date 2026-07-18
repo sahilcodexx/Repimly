@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { useCanvas } from "@/context/context";
 
 const GRID_SIZE = 20;
 const GRID_LINE_COLOR = "rgba(128,128,128,0.08)";
 
-export function GridOverlay() {
+export function useGridSnap() {
   const { canvasEditor, showGrid } = useCanvas();
 
   useEffect(() => {
@@ -33,19 +33,4 @@ export function GridOverlay() {
       canvasEditor.off("object:moving", snapToGrid);
     };
   }, [canvasEditor, showGrid]);
-
-  if (!showGrid) return null;
-
-  return (
-    <div
-      className="pointer-events-none absolute inset-0 z-10"
-      style={{
-        backgroundImage: `
-          linear-gradient(${GRID_LINE_COLOR} 1px, transparent 1px),
-          linear-gradient(90deg, ${GRID_LINE_COLOR} 1px, transparent 1px)
-        `,
-        backgroundSize: `${GRID_SIZE}px ${GRID_SIZE}px`,
-      }}
-    />
-  );
 }
