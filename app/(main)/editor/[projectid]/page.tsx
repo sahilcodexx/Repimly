@@ -11,6 +11,7 @@ import { Project } from "@/utils/types";
 import EditorTopbar from "../_components/editor-topbar";
 import { FabricImage } from "fabric";
 import EditorSidebar from "../_components/editor-sidebar";
+import { useKeyboardShortcuts } from "../_components/use-keyboard-shortcuts";
 
 const Editor = () => {
   const { projectid } = useParams();
@@ -188,6 +189,7 @@ const Editor = () => {
         isSaving,
       }}
     >
+      <KeyboardShortcuts project={projectWithId} />
       <div className="flex min-h-screen items-center justify-center text-center lg:hidden">
         <div className="max-w-sm px-4">
           <Monitor className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
@@ -224,5 +226,10 @@ const Editor = () => {
     </CanvasContext.Provider>
   );
 };
+
+function KeyboardShortcuts({ project }: { project: Project | null }) {
+  useKeyboardShortcuts(project);
+  return null;
+}
 
 export default Editor;
