@@ -69,8 +69,10 @@ export type CanvasContextType = {
   undo: () => void;
   redo: () => void;
   reset: () => void;
-  saveState: () => void;
+  saveState: (customCanvas?: any) => void;
   isSaving: boolean;
+  showGrid: boolean;
+  setShowGrid: Dispatch<SetStateAction<boolean>>;
 };
 
 export interface ToolConfig {
@@ -100,4 +102,5 @@ export type ToolId =
   | "background"
   | "ai_extender"
   | "ai_edit"
-  | "layers";
+  | "layers"
+  | "shapes";

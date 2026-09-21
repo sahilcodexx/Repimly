@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { useCanvas } from "@/context/context";
 import { FilterConfig } from "@/utils/types";
-import { RotateCcw } from "lucide-react";
+import { RotateCcw, Sparkles, Skull, Mountain, Sunset, Snowflake, Flame, ImageOff } from "lucide-react";
 import { useParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
@@ -85,6 +85,22 @@ const DEFAULT_VALUES = FILTER_CONFIGS.reduce(
   },
   {} as Record<string, number>,
 );
+
+interface Preset {
+  name: string;
+  icon: React.ElementType;
+  values: Record<string, number>;
+}
+
+const PRESETS: Preset[] = [
+  { name: "Original", icon: ImageOff, values: DEFAULT_VALUES },
+  { name: "Vintage", icon: Sparkles, values: { brightness: 8, contrast: -12, saturation: -25, vibrance: 12, blur: 0, hue: 12 } },
+  { name: "Noir", icon: Skull, values: { brightness: -8, contrast: 45, saturation: -85, vibrance: -20, blur: 0, hue: 0 } },
+  { name: "Sepia", icon: Mountain, values: { brightness: 5, contrast: -8, saturation: -35, vibrance: 18, blur: 0, hue: 25 } },
+  { name: "Dramatic", icon: Sunset, values: { brightness: -18, contrast: 55, saturation: 12, vibrance: 25, blur: 0, hue: 0 } },
+  { name: "Cool", icon: Snowflake, values: { brightness: 5, contrast: -5, saturation: -12, vibrance: 8, blur: 0, hue: -25 } },
+  { name: "Warm", icon: Flame, values: { brightness: 8, contrast: -5, saturation: -8, vibrance: 10, blur: 0, hue: 25 } },
+];
 
 const AdjustControl = () => {
   const [filterValues, setFilterValues] = useState(DEFAULT_VALUES);
@@ -210,60 +226,98 @@ const AdjustControl = () => {
 
   if (!canvasEditor) {
     return (
-      <div className="p-4">
-        <p className="text-sm text-muted-foreground">
-          Load an image to start adjusting
-        </p>
-      </div>
+      <p className="text-xs text-muted-foreground">
+        Load an image to start adjusting
+      </p>
     );
   }
 
+  const isPresetActive = (preset: Preset) =>
+    preset.name === "Original"
+      ? Object.values(filterValues).every((v) => v === 0)
+      : PRESETS.every((p) =>
+          p.name === preset.name
+            ? Object.entries(p.values).every(([k, v]) => filterValues[k] === v)
+            : true,
+        );
+
   return (
-    <div className="space-y-5">
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium text-foreground">Image Adjustments</h3>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={resetFilters}
-          className="h-7 gap-1 text-xs text-muted-foreground"
-        >
-          <RotateCcw className="h-3.5 w-3.5" />
-          Reset
-        </Button>
-      </div>
-      {FILTER_CONFIGS.map((config) => (
-        <div key={config.key} className="space-y-2">
-          <div className="flex items-center justify-between">
-            <label className="text-xs text-muted-foreground">{config.label}</label>
-            <span className="text-xs tabular-nums text-muted-foreground">
-              {filterValues[config.key]}
-              {config.suffix || ""}
-            </span>
-          </div>
-          <Slider
-            value={[filterValues[config.key]]}
-            onValueChange={(value) => handleValueChange(config.key, value)}
-            min={config.min}
-            max={config.max}
-            step={config.step}
-            className="w-full"
-          />
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+          Presets
+        </p>
+        <div className="grid grid-cols-4 gap-1">
+          {PRESETS.map((preset) => {
+            const Icon = preset.icon;
+            const isActive = isPresetActive(preset);
+            return (
+              <button
+                key={preset.name}
+                type="button"
+                onClick={() => {
+                  setFilterValues(preset.values);
+                  applyFilters(preset.values);
+                }}
+                className={`flex cursor-pointer flex-col items-center gap-1 rounded-md p-2 transition-colors duration-100 ease-out active:scale-[0.97] ${
+                  isActive
+                    ? "bg-[#0d99ff]/10 text-[#0d99ff]"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                }`}
+              >
+                <Icon className="size-4" />
+                <span className="text-[10px] font-medium">{preset.name}</span>
+              </button>
+            );
+          })}
         </div>
-      ))}
+      </div>
+
+      <div className="space-y-3 border-t border-border pt-3">
+        <div className="flex items-center justify-between">
+          <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+            Fine tune
+          </p>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={resetFilters}
+            className="h-6 gap-1 px-1.5 text-[11px] text-muted-foreground"
+          >
+            <RotateCcw className="size-3" />
+            Reset
+          </Button>
+        </div>
+
+        {FILTER_CONFIGS.map((config) => (
+          <div key={config.key} className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label className="text-[11px] text-muted-foreground">
+                {config.label}
+              </label>
+              <span className="text-[11px] tabular-nums text-muted-foreground">
+                {filterValues[config.key]}
+                {config.suffix || ""}
+              </span>
+            </div>
+            <Slider
+              value={[filterValues[config.key]]}
+              onValueChange={(value) => handleValueChange(config.key, value)}
+              min={config.min}
+              max={config.max}
+              step={config.step}
+              className="w-full"
+            />
+          </div>
+        ))}
+      </div>
+
       {isApplying && (
-        <div className="flex items-center justify-center gap-2 py-2 text-xs text-muted-foreground">
-          <div className="h-3 w-3 animate-spin rounded-full border border-foreground/30 border-t-foreground/80" />
-          Applying filters...
+        <div className="flex items-center justify-center gap-2 py-1 text-[11px] text-muted-foreground">
+          <div className="size-3 animate-spin rounded-full border border-foreground/30 border-t-foreground/80" />
+          Applying…
         </div>
       )}
-      <div className="rounded-lg border border-border bg-muted/50 p-3 text-center">
-        <p className="text-xs text-muted-foreground">
-          Adjustments are applied in real-time. Use the{" "}
-          <span className="text-primary"> Reset button </span> to restore
-          original values.
-        </p>
-      </div>
     </div>
   );
 };

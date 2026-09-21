@@ -1,44 +1,60 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { Slider } from "@/components/ui/slider";
-import { Button } from "@/components/ui/button";
-import { ZoomIn, ZoomOut, Maximize } from "lucide-react";
+import { Maximize, Grid3x3, Minus, Plus } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useCanvas } from "@/context/context";
 import { Project } from "@/utils/types";
+import { cn } from "@/lib/utils";
 
 const ZOOM_MIN = 10;
 const ZOOM_MAX = 500;
 
-export function ZoomControls({ project, containerRef }: { project: Project; containerRef: React.RefObject<HTMLDivElement | null> }) {
-  const { canvasEditor } = useCanvas();
+export function ZoomControls({
+  project,
+  containerRef,
+}: {
+  project: Project;
+  containerRef: React.RefObject<HTMLDivElement | null>;
+}) {
+  const { canvasEditor, showGrid, setShowGrid } = useCanvas();
   const [zoom, setZoom] = useState(100);
   const isUpdatingRef = useRef(false);
 
   const getViewportScale = useCallback(() => {
-    if (!containerRef.current) return 1;
+    if (!containerRef.current) return 0.5;
     const container = containerRef.current;
-    const cw = container.clientWidth - 40;
-    const ch = container.clientHeight - 40;
-    return Math.min(cw / project.width, ch / project.height, 1);
+    const cw = container.clientWidth - 48;
+    const ch = container.clientHeight - 48;
+    if (cw <= 0 || ch <= 0) return 0.5;
+    return Math.max(Math.min(cw / project.width, ch / project.height, 1), 0.05);
   }, [containerRef, project]);
 
-  const applyZoom = useCallback((percent: number) => {
-    if (!canvasEditor || isUpdatingRef.current) return;
-    const value = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, percent)) / 100;
-    canvasEditor.setDimensions(
-      { width: project.width * value, height: project.height * value },
-      { backstoreOnly: false },
-    );
-    canvasEditor.setZoom(value);
-    canvasEditor.calcOffset();
-    canvasEditor.requestRenderAll();
-    setZoom(Math.round(percent));
-  }, [canvasEditor, project]);
+  const applyZoom = useCallback(
+    (percent: number) => {
+      if (!canvasEditor) return;
+      const clamped = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, percent));
+      const value = clamped / 100;
+      canvasEditor.setDimensions(
+        { width: project.width * value, height: project.height * value },
+        { backstoreOnly: false },
+      );
+      canvasEditor.setZoom(value);
+      canvasEditor.calcOffset();
+      canvasEditor.requestRenderAll();
+      setZoom(Math.round(clamped));
+    },
+    [canvasEditor, project],
+  );
 
   const syncZoom = useCallback(() => {
     if (!canvasEditor || isUpdatingRef.current) return;
     const current = canvasEditor.getZoom();
+    if (!Number.isFinite(current) || current <= 0) return;
     setZoom(Math.round(current * 100));
   }, [canvasEditor]);
 
@@ -46,23 +62,26 @@ export function ZoomControls({ project, containerRef }: { project: Project; cont
     if (!canvasEditor) return;
     syncZoom();
 
-    const handleMouseWheel = (e: any) => {
-      const delta = e.e.deltaY;
-      const newZoom = zoom + (delta > 0 ? -10 : 10);
-      applyZoom(Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, newZoom)));
+    const handleMouseWheel = (opt: any) => {
+      const e = opt.e as WheelEvent;
+      e.preventDefault();
+      e.stopPropagation();
+      const current = canvasEditor.getZoom() * 100;
+      const next = current + (e.deltaY > 0 ? -10 : 10);
+      applyZoom(Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, next)));
     };
 
     canvasEditor.on("mouse:wheel", handleMouseWheel);
     return () => {
       canvasEditor.off("mouse:wheel", handleMouseWheel);
     };
-  }, [canvasEditor, syncZoom, applyZoom, zoom]);
+  }, [canvasEditor, syncZoom, applyZoom]);
 
-  const handleSliderChange = (value: number[]) => {
-    isUpdatingRef.current = true;
-    applyZoom(value[0]);
-    setTimeout(() => { isUpdatingRef.current = false; }, 50);
-  };
+  useEffect(() => {
+    if (!canvasEditor) return;
+    const id = setInterval(syncZoom, 200);
+    return () => clearInterval(id);
+  }, [canvasEditor, syncZoom]);
 
   const handleFitToScreen = () => {
     const scale = getViewportScale();
@@ -70,52 +89,80 @@ export function ZoomControls({ project, containerRef }: { project: Project; cont
   };
 
   return (
-    <div className="absolute bottom-4 left-1/2 z-20 -translate-x-1/2">
-      <div className="flex items-center gap-2 rounded-xl border border-border bg-card/90 px-3 py-2 shadow-sm backdrop-blur-md">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-7 w-7 text-muted-foreground"
-          onClick={() => applyZoom(zoom - 10)}
-          disabled={zoom <= ZOOM_MIN}
-        >
-          <ZoomOut className="h-3.5 w-3.5" />
-        </Button>
+    <div className="absolute bottom-3 right-3 z-30">
+      <div className="flex items-center gap-0.5 rounded-lg border border-border bg-card px-1 py-1 shadow-sm">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              onClick={() => applyZoom(zoom - 10)}
+              disabled={zoom <= ZOOM_MIN}
+              aria-label="Zoom out"
+              className="flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors duration-100 ease-out hover:bg-muted hover:text-foreground active:scale-[0.97] disabled:opacity-30"
+            >
+              <Minus className="size-3.5" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>Zoom out</TooltipContent>
+        </Tooltip>
 
-        <Slider
-          value={[zoom]}
-          onValueChange={handleSliderChange}
-          min={ZOOM_MIN}
-          max={ZOOM_MAX}
-          step={1}
-          className="w-24"
-        />
-
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-7 w-7 text-muted-foreground"
-          onClick={() => applyZoom(zoom + 10)}
-          disabled={zoom >= ZOOM_MAX}
-        >
-          <ZoomIn className="h-3.5 w-3.5" />
-        </Button>
-
-        <span className="w-12 text-center text-xs tabular-nums text-muted-foreground">
-          {zoom}%
-        </span>
-
-        <span className="h-4 w-px bg-border" />
-
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-7 gap-1 text-xs text-muted-foreground"
+        <button
+          type="button"
           onClick={handleFitToScreen}
+          className="min-w-[48px] rounded-md px-1.5 py-1 text-center text-[11px] tabular-nums text-muted-foreground transition-colors duration-100 ease-out hover:bg-muted hover:text-foreground active:scale-[0.97]"
         >
-          <Maximize className="h-3.5 w-3.5" />
-          Fit
-        </Button>
+          {zoom}%
+        </button>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              onClick={() => applyZoom(zoom + 10)}
+              disabled={zoom >= ZOOM_MAX}
+              aria-label="Zoom in"
+              className="flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors duration-100 ease-out hover:bg-muted hover:text-foreground active:scale-[0.97] disabled:opacity-30"
+            >
+              <Plus className="size-3.5" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>Zoom in</TooltipContent>
+        </Tooltip>
+
+        <div className="mx-0.5 h-4 w-px bg-border" />
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              onClick={() => setShowGrid(!showGrid)}
+              aria-label={showGrid ? "Hide grid" : "Show grid"}
+              className={cn(
+                "flex size-7 items-center justify-center rounded-md transition-colors duration-100 ease-out active:scale-[0.97]",
+                showGrid
+                  ? "bg-[#0d99ff]/10 text-[#0d99ff]"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground",
+              )}
+            >
+              <Grid3x3 className="size-3.5" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>{showGrid ? "Hide grid" : "Show grid"}</TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              onClick={handleFitToScreen}
+              aria-label="Fit to screen"
+              className="flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors duration-100 ease-out hover:bg-muted hover:text-foreground active:scale-[0.97]"
+            >
+              <Maximize className="size-3.5" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>Fit to screen</TooltipContent>
+        </Tooltip>
       </div>
     </div>
   );
