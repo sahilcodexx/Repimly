@@ -55,14 +55,22 @@ export function CropContent() {
     if (!canvasEditor) return null;
 
     const activeObject = canvasEditor.getActiveObject();
-    if (activeObject && activeObject.type === "image") {
+    if (
+      activeObject &&
+      (activeObject.type === "image" ||
+        activeObject.type === "Image" ||
+        activeObject instanceof FabricImage)
+    ) {
       return activeObject as FabricImage;
     }
 
     const objects = canvasEditor.getObjects();
     return (
       (objects.find(
-        (obj: fabric.Object) => obj.type === "image",
+        (obj: fabric.Object) =>
+          obj.type === "image" ||
+          obj.type === "Image" ||
+          obj instanceof FabricImage,
       ) as FabricImage) || null
     );
   };
