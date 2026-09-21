@@ -5,7 +5,9 @@ import { useConvexMutation } from "@/hooks/use-convex-query";
 import { Project } from "@/utils/types";
 import { use, useEffect, useRef, useState } from "react";
 import { Canvas, FabricImage } from "fabric";
-import { ZoomControls } from "./zoom-controls";
+import { GridOverlay } from "./grid-overlay";
+import { Skeleton } from "@/components/ui/skeleton";
+
 
 const CanvasEditor = ({ project }: { project: Project }) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -23,13 +25,12 @@ const CanvasEditor = ({ project }: { project: Project }) => {
 
 
   const calculateViewportScale = () => {
-    if (!containerRef.current || !project) return 1;
+    if (!containerRef.current || !project) return 0.5;
     const container = containerRef.current;
-    const containerWidth = container.clientWidth - 40;
-    const containerHeight = container.clientHeight - 40;
-    const scaleX = containerWidth / project.width;
-    const scaleY = containerHeight / project.height;
-    return Math.min(scaleX, scaleY, 1);
+    const cw = container.clientWidth - 40;
+    const ch = container.clientHeight - 40;
+    if (cw <= 0 || ch <= 0) return 0.5;
+    return Math.max(Math.min(cw / project.width, ch / project.height, 1), 0.05);
   };
 
   useEffect(() => {
@@ -56,8 +57,9 @@ const CanvasEditor = ({ project }: { project: Project }) => {
         try {
           await canvas.loadFromJSON(project.canvasState);
         } catch (error) {
-          console.error("Error loading canvas state:", error);
+          console.error("[canvas] Error loading canvas state:", error);
         }
+      } else {
       }
 
       canvas.backgroundColor = "#ffffff";
@@ -107,12 +109,25 @@ const CanvasEditor = ({ project }: { project: Project }) => {
             canvas.add(fabricImage);
           }
         } catch (error) {
-          console.error("Error loading project image:", error);
+          console.error("[canvas] Error loading project image:", error);
         }
+      } else {
       }
       canvas.calcOffset();
       canvas.requestRenderAll();
       setCanvasEditor(canvas);
+      import("fabric").then(({ Object: FabricObjectClass }) => {
+        FabricObjectClass.prototype.set({
+          transparentCorners: false,
+          cornerColor: "#0d99ff",
+          cornerStrokeColor: "#ffffff",
+          cornerSize: 8,
+          cornerStyle: "circle",
+          borderColor: "rgba(13, 153, 255, 0.5)",
+          borderScaleFactor: 1.5,
+          padding: 4,
+        });
+      });
       saveState();
 
       setTimeout(() => {
@@ -223,16 +238,16 @@ const CanvasEditor = ({ project }: { project: Project }) => {
       />
       {isLoading && (
         <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/60 backdrop-blur-sm">
-          <div className="flex flex-col items-center gap-4">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-foreground/30 border-t-foreground" />
-            <p className="text-sm text-muted-foreground">Loading Canvas</p>
+          <div className="flex flex-col items-center gap-3">
+            <Skeleton className="h-6 w-24" />
+            <Skeleton className="h-3 w-32" />
           </div>
         </div>
       )}
-      <div className="rounded-xl border border-border bg-white p-1 shadow-sm">
+      <div className="relative rounded-xl border border-border bg-white p-1 shadow-sm">
+        <GridOverlay />
         <canvas id="canvas" ref={canvasRef} />
       </div>
-      <ZoomControls project={project} containerRef={containerRef} />
     </div>
   );
 };

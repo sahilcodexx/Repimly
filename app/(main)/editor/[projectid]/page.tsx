@@ -2,16 +2,21 @@
 import { CanvasContext } from "@/context/context";
 import { api } from "@/convex/_generated/api";
 import { useConvexQuery, useConvexMutation } from "@/hooks/use-convex-query";
-import { Loader2, Monitor } from "lucide-react";
+import { Monitor } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useParams } from "next/navigation";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { HashLoader } from "react-spinners";
 import CanvasEditor from "../_components/canvas-editor";
+import { ZoomControls } from "../_components/zoom-controls";
 import { Project } from "@/utils/types";
 import EditorTopbar from "../_components/editor-topbar";
+import EditorToolbar from "../_components/editor-toolbar";
 import { FabricImage } from "fabric";
 import EditorSidebar from "../_components/editor-sidebar";
 import { useKeyboardShortcuts } from "../_components/use-keyboard-shortcuts";
+import { CanvasContextMenu } from "../_components/canvas-context-menu";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 const Editor = () => {
   const { projectid } = useParams();
@@ -19,7 +24,9 @@ const Editor = () => {
   const [processingMessage, setProcessingMessage] = useState<string | null>(
     null,
   );
+  const canvasAreaRef = useRef<HTMLDivElement>(null);
   const [activeTool, setActiveTool] = useState<string>("resize");
+  const [showGrid, setShowGrid] = useState(false);
   const [history, setHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState<number>(-1);
   const isRestoring = useRef(false);
@@ -75,31 +82,27 @@ const Editor = () => {
     }
   };
 
+  const lastSavedRef = useRef<string | null>(null);
+
   useEffect(() => {
-    if (!project) return;
-    let saveTimeout: NodeJS.Timeout;
+    if (!project || historyIndex < 0) return;
 
-    const autoSave = () => {
-      if (history.length > 0) {
-        clearTimeout(saveTimeout);
-        saveTimeout = setTimeout(() => {
-          const currentCanvasState = history[historyIndex];
-          updateProject({
-            projectId: project._id,
-            canvasState: JSON.parse(currentCanvasState),
-          });
-        }, 2000);
-      }
-    };
+    const currentState = history[historyIndex];
+    if (currentState === lastSavedRef.current) return;
 
-    autoSave();
+    const timer = setTimeout(() => {
+      updateProject({
+        projectId: project._id,
+        canvasState: JSON.parse(currentState),
+      });
+      lastSavedRef.current = currentState;
+    }, 2000);
 
-    return () => clearTimeout(saveTimeout);
-  }, [history, historyIndex, project, updateProject]);
+    return () => clearTimeout(timer);
+  }, [historyIndex, project, updateProject]);
 
   const reset = async () => {
     if (canvasEditor && project?.originalImageUrl) {
-      // Clear canvas and load original image
       canvasEditor.clear();
       const img = await FabricImage.fromURL(project.originalImageUrl, {
         crossOrigin: "anonymous",
@@ -131,21 +134,25 @@ const Editor = () => {
 
       canvasEditor.add(img);
       canvasEditor.requestRenderAll();
-      saveState(); // Save the reset state as a new history point
+      saveState();
     }
   };
 
-  // Ensure project has all required properties
   const projectWithId = project
     ? ({ ...project, _id: projectid } as Project)
     : null;
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4">
-        <div className="flex items-center gap-3 text-muted-foreground">
-          <Loader2 size={20} className="animate-spin" />
-          <p className="text-sm">Loading project...</p>
+      <div className="flex h-dvh flex-col bg-background">
+        <div className="flex h-11 items-center gap-3 border-b border-border px-3">
+          <Skeleton className="h-4 w-24" />
+          <Skeleton className="h-4 w-40" />
+        </div>
+        <div className="flex flex-1">
+          <Skeleton className="h-full w-12 rounded-none" />
+          <Skeleton className="h-full w-60 rounded-none" />
+          <Skeleton className="h-full flex-1 rounded-none" />
         </div>
       </div>
     );
@@ -153,16 +160,16 @@ const Editor = () => {
 
   if (error || !project) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="rounded-xl border border-border bg-card p-8 text-center shadow-sm">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
-            <Monitor className="h-6 w-6 text-destructive" />
+      <div className="flex h-dvh items-center justify-center bg-background">
+        <div className="rounded-lg border border-border bg-card p-8 text-center shadow-sm">
+          <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-full bg-destructive/10">
+            <Monitor className="size-6 text-destructive" />
           </div>
-          <h2 className="mb-1 text-lg font-semibold text-foreground">
-            Project Not Found
+          <h2 className="mb-1 text-base font-semibold text-foreground">
+            Project not found
           </h2>
           <p className="text-sm text-muted-foreground">
-            The project you're looking for doesn't exist or has been removed.
+            This project doesn&apos;t exist or has been removed.
           </p>
         </div>
       </div>
@@ -187,42 +194,60 @@ const Editor = () => {
         reset,
         saveState,
         isSaving,
+        showGrid,
+        setShowGrid,
       }}
     >
-      <KeyboardShortcuts project={projectWithId} />
-      <div className="flex min-h-screen items-center justify-center text-center lg:hidden">
-        <div className="max-w-sm px-4">
-          <Monitor className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-          <h2 className="mb-1 text-xl font-semibold text-foreground">Desktop Required</h2>
-          <p className="text-sm text-muted-foreground">
-            Please use a larger screen to access the full editing experience
-          </p>
+      <TooltipProvider delayDuration={0}>
+        <KeyboardShortcuts project={projectWithId} />
+        <CanvasContextMenu />
+
+        <div className="flex h-dvh items-center justify-center text-center lg:hidden">
+          <div className="max-w-sm px-4">
+            <Monitor className="mx-auto mb-4 size-12 text-muted-foreground" />
+            <h2 className="mb-1 text-lg font-semibold text-foreground">
+              Desktop required
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Use a larger screen to access the full editing experience
+            </p>
+          </div>
         </div>
-      </div>
-      <div className="hidden min-h-screen lg:block bg-background">
-        {processingMessage && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-            <div className="flex flex-col items-center gap-4 rounded-2xl border border-border bg-card p-8 shadow-2xl">
-              <HashLoader color="hsl(var(--primary))" />
-              <div className="text-center">
-                <p className="text-lg font-medium text-foreground">
-                  {processingMessage}
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Please wait, do not switch tabs or navigate away
-                </p>
+
+        <div className="hidden min-h-screen w-full bg-background lg:block">
+          <div className="flex h-screen w-full flex-col">
+            {processingMessage && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-[2px]">
+                <div className="flex flex-col items-center gap-4 rounded-xl border border-border bg-card p-8 shadow-2xl">
+                  <HashLoader color="#0d99ff" />
+                  <div className="text-center">
+                    <p className="text-sm font-medium text-foreground">
+                      {processingMessage}
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Please wait — don&apos;t switch tabs
+                    </p>
+                  </div>
+                </div>
               </div>
+            )}
+
+            <EditorTopbar project={projectWithId!} />
+
+            <div className="grid w-full flex-1 overflow-hidden" style={{ gridTemplateColumns: "48px 1fr 240px" }}>
+              <div style={{ gridColumn: "1" }}><EditorToolbar /></div>
+              <div ref={canvasAreaRef} className="relative min-w-0 overflow-hidden" style={{ gridColumn: "2", minWidth: 0 }}>
+                <CanvasEditor project={projectWithId!} />
+                <ZoomControls
+                  project={projectWithId!}
+                  containerRef={canvasAreaRef}
+                />
+              </div>
+              <div style={{ gridColumn: "3" }}><EditorSidebar project={projectWithId!} /></div>
             </div>
           </div>
-        )}
-        <EditorTopbar project={projectWithId!} />
-        <div className="flex h-[calc(100vh-3.5rem)] overflow-hidden">
-          <EditorSidebar project={projectWithId!} />
-          <div className="flex-1 bg-muted/30">
-            <CanvasEditor project={projectWithId!} />
-          </div>
         </div>
-      </div>
+      </TooltipProvider>
     </CanvasContext.Provider>
   );
 };
