@@ -63,7 +63,7 @@ const ProjectOpenModel = ({ isOpen, onClose }: ProjectOpenModelProps) => {
       formData.append("file", selectedFile as Blob);
       formData.append("fileName", selectedFile.name);
 
-      const uploadResponse = await fetch("api/imagekit/upload", {
+      const uploadResponse = await fetch("/api/imagekit/upload", {
         method: "POST",
         body: formData,
       });

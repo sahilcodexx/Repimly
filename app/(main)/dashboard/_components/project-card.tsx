@@ -34,19 +34,22 @@ const ProjectCard = ({ project, onEdit }: { project: any; onEdit: any }) => {
 
   return (
     <Card className="group relative overflow-hidden pt-0 transition-all duration-200 hover:scale-[1.02] hover:transform hover:border-white/20">
-      <div className="relative aspect-video">
+      <div
+        className="relative aspect-video cursor-pointer"
+        onClick={onEdit}
+      >
         {project.thumbnailUrl && (
           <Image
             src={project.thumbnailUrl}
             width={600}
             height={400}
-            alt="projcet"
-            className="h-full w-full object-cover"
+            alt="project"
+            className="h-full w-full object-cover transition-opacity group-hover:opacity-90"
           />
         )}
       </div>
-      <CardContent>
-        <p className="mb-1 mb-2 truncate text-2xl capitalize">
+      <CardContent className="cursor-pointer" onClick={onEdit}>
+        <p className="mb-2 truncate text-2xl capitalize">
           {project.title}
         </p>
         <div className="flex items-center justify-between">
@@ -60,14 +63,19 @@ const ProjectCard = ({ project, onEdit }: { project: any; onEdit: any }) => {
       </CardContent>
       <CardFooter>
         <div className="flex w-full items-center justify-between gap-3">
-          <Button onClick={handelDelete} size={"sm"} variant={"destructive"}>
+          <Button
+            onClick={handelDelete}
+            size={"sm"}
+            variant={"destructive"}
+            disabled={isLoading}
+          >
             <Trash /> Delete
           </Button>
           <Button
             onClick={onEdit}
             size={"sm"}
             variant={"outline"}
-            disabled={!isLoading}
+            disabled={isLoading}
           >
             <Edit /> Edit
           </Button>

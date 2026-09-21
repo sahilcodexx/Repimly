@@ -27,6 +27,9 @@ export const create = mutation({
     },
   ): Promise<string> => {
     const user = await ctx.runQuery(api.users.getCurrentUser);
+    if (!user) {
+      throw new Error("Not Authenticated");
+    }
     if (user.plan === "free") {
       const projectCount = await ctx.db
         .query("project")
@@ -63,6 +66,7 @@ export const create = mutation({
 export const getUserProjects = query({
   handler: async (ctx: QueryCtx): Promise<Project[]> => {
     const user = await ctx.runQuery(api.users.getCurrentUser);
+    if (!user) return [];
     const projects = await ctx.db
       .query("project")
       .withIndex("by_user_updated", (q) => q.eq("userId", user._id))
@@ -79,6 +83,9 @@ export const deleteProjects = mutation({
     args: { projectID: Id<"project"> },
   ): Promise<{ success: boolean }> => {
     const user = await ctx.runQuery(api.users.getCurrentUser);
+    if (!user) {
+      throw new Error("Not Authenticated");
+    }
 
     const project = (await ctx.db.get(args.projectID)) as Project | null;
 
@@ -107,11 +114,12 @@ export const getProject = query({
     args: { projectId: Id<"project"> },
   ): Promise<Project | null> => {
     const user = await ctx.runQuery(api.users.getCurrentUser);
+    if (!user) return null;
     const project = await ctx.db.get(args.projectId);
     if (!project) {
       throw new Error("Project not found");
     }
-    if (!user || project?.userId !== user._id) {
+    if (project.userId !== user._id) {
       throw new Error("Access Denied");
     }
     return project;
@@ -143,6 +151,9 @@ export const updateProject = mutation({
     },
   ): Promise<Id<"project">> => {
     const user = await ctx.runQuery(api.users.getCurrentUser);
+    if (!user) {
+      throw new Error("Not Authenticated");
+    }
 
     const project = await ctx.db.get(args.projectId);
     if (!project) {
