@@ -9,8 +9,8 @@ import { useStoreUserEffect } from "@/hooks/use-storeuser-effect";
 import { BarLoader } from "react-spinners";
 import { Authenticated, Unauthenticated } from "convex/react";
 import { LayoutDashboard } from "lucide-react";
-import { motion, useMotionValueEvent, useScroll } from "motion/react";
-import { useEffect, useState } from "react";
+import { AnimatePresence, motion, useMotionValueEvent, useScroll } from "motion/react";
+import { useState } from "react";
 
 const Header = () => {
   const { theme } = useTheme();
@@ -20,46 +20,31 @@ const Header = () => {
 
   const [scrolled, setScrolled] = useState<boolean>(false);
   const { scrollY } = useScroll();
-  useMotionValueEvent(scrollY, "change", (lastest) => {
-    if (lastest > 20) {
+  useMotionValueEvent(scrollY, "change", (latest) => {
+    if (latest > 20) {
       setScrolled(true);
     } else {
       setScrolled(false);
     }
   });
-  const [width, setWidth] = useState("100%");
 
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth <= 768) {
-        setWidth(scrolled ? "80%" : "100%");
-      } else {
-        setWidth(scrolled ? "50%" : "100%");
-      }
-    };
-
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, [scrolled]);
   if (path.startsWith("/editor") || path.startsWith("/sign-in") || path.startsWith("/sign-up")) {
     return null;
   }
 
   return (
-    <header className="fixed top-0 z-50 w-full overflow-x-hidden">
+    <header className="fixed top-0 z-50 flex w-full justify-center px-4 pt-2">
       <motion.div
-        animate={{ width }}
         layout
         transition={{
-          layout: {
-            duration: 0.3,
-            ease: [0.22, 1, 0.36, 1],
-          },
+          type: "spring",
+          stiffness: 380,
+          damping: 30,
         }}
-        className={`mx-auto mt-2 flex w-full max-w-sm items-center justify-between px-4 py-4 backdrop-blur-2xl md:max-w-5xl md:px-7 ${
-          scrolled &&
-          "rounded-2xl border border-neutral-300/80 bg-white/20 shadow-lg dark:border-neutral-600/40 dark:bg-neutral-900/50"
+        className={`flex items-center justify-between px-4 py-3 backdrop-blur-2xl transition-colors duration-300 ${
+          scrolled
+            ? "w-[90%] md:w-3/5 max-w-4xl rounded-2xl border border-neutral-300/80 bg-white/40 shadow-lg dark:border-neutral-600/40 dark:bg-neutral-900/60 md:px-7"
+            : "w-full max-w-7xl rounded-none border-transparent bg-transparent md:px-7"
         }`}
       >
         <Link href={"/"} className="flex items-end text-xl md:text-2xl font-semibold">
@@ -101,41 +86,65 @@ const Header = () => {
               ease: [0.22, 1, 0.36, 1],
             },
           }}
-          className="flex items-center gap-4"
+          className="flex items-center gap-3"
         >
-          <span>
-            <ModeToggle />
-          </span>
+          <ModeToggle />
+
           <Unauthenticated>
-            {scrolled ? (
-              <SignUpButton>
-                <Button>Join Now</Button>
-              </SignUpButton>
-            ) : (
-              <>
-                <SignInButton>
-                  <Button variant={"outline"} className="hidden sm:flex">
-                    Sign In
-                  </Button>
-                </SignInButton>
-                <SignUpButton>
-                  <Button>Register</Button>
-                </SignUpButton>
-              </>
-            )}
+            <div className="flex items-center gap-2">
+              <AnimatePresence mode="popLayout" initial={false}>
+                {scrolled ? (
+                  <motion.div
+                    key="scrolled-join"
+                    layout
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <SignUpButton>
+                      <Button size="sm">Join Now</Button>
+                    </SignUpButton>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="full-auth-buttons"
+                    layout
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    transition={{ duration: 0.2 }}
+                    className="flex items-center gap-2"
+                  >
+                    <SignInButton>
+                      <Button variant="outline" size="sm" className="hidden sm:inline-flex">
+                        Sign In
+                      </Button>
+                    </SignInButton>
+                    <SignUpButton>
+                      <Button size="sm">Register</Button>
+                    </SignUpButton>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </Unauthenticated>
 
-          {!isSignedIn || (
-            <Link href={"/dashboard"}>
-              <Button variant={"default"} className="hidden sm:flex">
-                <LayoutDashboard className="mr-2" size={18} />
-                Dashboard
-              </Button>
-            </Link>
+          {isSignedIn && (
+            <motion.div layout>
+              <Link href={"/dashboard"}>
+                <Button variant={"default"} size="sm" className="hidden sm:inline-flex">
+                  <LayoutDashboard className="mr-2" size={16} />
+                  Dashboard
+                </Button>
+              </Link>
+            </motion.div>
           )}
 
           <Authenticated>
-            <UserButton />
+            <motion.div layout className="flex items-center">
+              <UserButton />
+            </motion.div>
           </Authenticated>
         </motion.div>
         {isLoading && (
