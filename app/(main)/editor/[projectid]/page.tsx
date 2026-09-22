@@ -11,12 +11,12 @@ import CanvasEditor from "../_components/canvas-editor";
 import { ZoomControls } from "../_components/zoom-controls";
 import { Project } from "@/utils/types";
 import EditorTopbar from "../_components/editor-topbar";
-import EditorToolbar from "../_components/editor-toolbar";
 import { FabricImage } from "fabric";
 import EditorSidebar from "../_components/editor-sidebar";
 import { useKeyboardShortcuts } from "../_components/use-keyboard-shortcuts";
 import { CanvasContextMenu } from "../_components/canvas-context-menu";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { motion } from "motion/react";
 
 const Editor = () => {
   const { projectid } = useParams();
@@ -234,16 +234,24 @@ const Editor = () => {
 
             <EditorTopbar project={projectWithId!} />
 
-            <div className="grid w-full flex-1 overflow-hidden" style={{ gridTemplateColumns: "48px 1fr 240px" }}>
-              <div style={{ gridColumn: "1" }}><EditorToolbar /></div>
-              <div ref={canvasAreaRef} className="relative min-w-0 overflow-hidden" style={{ gridColumn: "2", minWidth: 0 }}>
+            <div className="grid w-full flex-1 overflow-hidden" style={{ gridTemplateColumns: "1fr auto" }}>
+              <div
+                ref={canvasAreaRef}
+                className="relative min-w-0 overflow-hidden"
+                style={{ gridColumn: "1", minWidth: 0 }}
+              >
                 <CanvasEditor project={projectWithId!} />
                 <ZoomControls
                   project={projectWithId!}
                   containerRef={canvasAreaRef}
                 />
               </div>
-              <div style={{ gridColumn: "3" }}><EditorSidebar project={projectWithId!} /></div>
+              <div
+                className="flex h-full items-center p-2"
+                style={{ gridColumn: "2" }}
+              >
+                <EditorSidebar project={projectWithId!} />
+              </div>
             </div>
           </div>
         </div>
