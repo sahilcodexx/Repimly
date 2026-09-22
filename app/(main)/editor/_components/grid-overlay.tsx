@@ -34,11 +34,9 @@ export function GridOverlay() {
     };
   }, [canvasEditor, showGrid]);
 
-  if (!showGrid) return null;
-
   return (
     <div
-      className="pointer-events-none absolute inset-0 z-10"
+      className={`pointer-events-none absolute inset-0 z-10 ${showGrid ? "block" : "hidden"}`}
       style={{
         backgroundImage: `
           linear-gradient(${GRID_LINE_COLOR} 1px, transparent 1px),

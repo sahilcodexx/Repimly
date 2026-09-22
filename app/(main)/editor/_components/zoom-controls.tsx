@@ -10,6 +10,7 @@ import {
 import { useCanvas } from "@/context/context";
 import { Project } from "@/utils/types";
 import { cn } from "@/lib/utils";
+import { motion } from "motion/react";
 
 const ZOOM_MIN = 10;
 const ZOOM_MAX = 500;

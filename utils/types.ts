@@ -103,4 +103,5 @@ export type ToolId =
   | "ai_extender"
   | "ai_edit"
   | "layers"
-  | "shapes";
+  | "shapes"
+  | "canvas";

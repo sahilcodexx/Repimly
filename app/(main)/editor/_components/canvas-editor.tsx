@@ -62,7 +62,7 @@ const CanvasEditor = ({ project }: { project: Project }) => {
       } else {
       }
 
-      canvas.backgroundColor = "#ffffff";
+      canvas.backgroundColor = canvas.backgroundColor || "#ffffff";
 
       canvas.setDimensions(
         {
@@ -222,20 +222,8 @@ const CanvasEditor = ({ project }: { project: Project }) => {
   return (
     <div
       ref={containerRef}
-      className="relative flex h-full w-full items-center justify-center overflow-hidden bg-muted/30"
+      className="relative flex h-full w-full items-center justify-center overflow-hidden bg-[#f7f7f7] dark:bg-[#121212]"
     >
-      <div
-        className="pointer-events-none absolute inset-0 opacity-[0.03]"
-        style={{
-          backgroundImage: `
-            linear-gradient(45deg, currentColor 25%, transparent 25%),
-            linear-gradient(-45deg, currentColor 25%, transparent 25%),
-            linear-gradient(45deg, transparent 75%, currentColor 75%),
-            linear-gradient(-45deg, transparent 75%, currentColor 75%)`,
-          backgroundSize: "20px 20px",
-          backgroundPosition: "0 0, 0 10px, 10px -10px, -10px 0px",
-        }}
-      />
       {isLoading && (
         <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/60 backdrop-blur-sm">
           <div className="flex flex-col items-center gap-3">
@@ -244,9 +232,21 @@ const CanvasEditor = ({ project }: { project: Project }) => {
           </div>
         </div>
       )}
-      <div className="relative rounded-xl border border-border bg-white p-1 shadow-sm">
+      <div
+        className="relative rounded-xl border border-border/80 shadow-2xl overflow-hidden"
+        style={{
+          backgroundImage:
+            canvasEditor?.backgroundColor === "" || canvasEditor?.backgroundColor === "transparent"
+              ? `linear-gradient(45deg, #cbd5e1 25%, transparent 25%), linear-gradient(-45deg, #cbd5e1 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #cbd5e1 75%), linear-gradient(-45deg, transparent 75%, #cbd5e1 75%)`
+              : undefined,
+          backgroundSize: "16px 16px",
+          backgroundPosition: "0 0, 0 8px, 8px -8px, -8px 0px",
+        }}
+      >
         <GridOverlay />
-        <canvas id="canvas" ref={canvasRef} />
+        <div>
+          <canvas id="canvas" ref={canvasRef} />
+        </div>
       </div>
     </div>
   );
