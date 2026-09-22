@@ -11,9 +11,12 @@ import {
   RectangleVertical,
   Smartphone,
   Maximize,
+  Image as ImageIcon,
 } from "lucide-react";
 import { useCanvas } from "@/context/context";
 import fabric, { FabricImage, Rect } from "fabric";
+import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface OriginalImageProps {
   left?: number;
@@ -28,28 +31,16 @@ interface OriginalImageProps {
 }
 
 const ASPECT_RATIOS = [
-  { label: "Freeform", value: null, icon: Maximize },
+  { label: "Freeform", value: null, icon: Maximize, ratio: "Custom" },
   { label: "Square", value: 1, icon: Square, ratio: "1:1" },
-  {
-    label: "Widescreen",
-    value: 16 / 9,
-    icon: RectangleHorizontal,
-    ratio: "16:9",
-  },
+  { label: "Widescreen", value: 16 / 9, icon: RectangleHorizontal, ratio: "16:9" },
   { label: "Portrait", value: 4 / 5, icon: RectangleVertical, ratio: "4:5" },
   { label: "Story", value: 9 / 16, icon: Smartphone, ratio: "9:16" },
+  { label: "Classic", value: 2 / 3, icon: RectangleVertical, ratio: "2:3" },
 ];
 
 export function CropContent() {
-  const { canvasEditor, activeTool } = useCanvas();
-
-  const [selectedImage, setSelectedImage] = useState<FabricImage | null>(null);
-  const [isCropMode, setIsCropMode] = useState(false);
-  const [selectedRatio, setSelectedRatio] = useState<number | null>(null);
-  const [cropRect, setCropRect] = useState<Rect | null>(null);
-  const [originalProps, setOriginalProps] = useState<OriginalImageProps | null>(
-    null,
-  );
+  const { canvasEditor, activeTool, saveState } = useCanvas();
 
   const getActiveImage = (): FabricImage | null => {
     if (!canvasEditor) return null;
@@ -75,12 +66,21 @@ export function CropContent() {
     );
   };
 
+  const [selectedImage, setSelectedImage] = useState<FabricImage | null>(() => getActiveImage());
+  const [isCropMode, setIsCropMode] = useState<boolean>(() => {
+    if (activeTool !== "crop" || !canvasEditor) return false;
+    return !!getActiveImage();
+  });
+  const [selectedRatio, setSelectedRatio] = useState<number | null>(null);
+  const [cropRect, setCropRect] = useState<Rect | null>(null);
+  const [originalProps, setOriginalProps] = useState<OriginalImageProps | null>(null);
+
   const removeAllCropRectangles = () => {
     if (!canvasEditor) return;
 
     const objects = canvasEditor.getObjects();
     const rectsToRemove = objects.filter(
-      (obj: fabric.Object) => obj.type === "rect",
+      (obj: fabric.Object) => (obj as any).name === "cropRect",
     );
 
     rectsToRemove.forEach((rect: any) => {
@@ -151,18 +151,19 @@ export function CropContent() {
       width: bounds.width * 0.8,
       height: bounds.height * 0.8,
       fill: "transparent",
-      stroke: "#00bcd4",
+      stroke: "#0d99ff",
       strokeWidth: 2,
-      strokeDashArray: [5, 5],
+      strokeDashArray: [6, 4],
       selectable: true,
       evented: true,
       name: "cropRect",
-      cornerColor: "#00bcd4",
-      cornerSize: 12,
+      cornerColor: "#0d99ff",
+      cornerStrokeColor: "#ffffff",
+      cornerSize: 8,
       transparentCorners: false,
       cornerStyle: "circle",
-      borderColor: "#00bcd4",
-      borderScaleFactor: 1,
+      borderColor: "#0d99ff",
+      borderScaleFactor: 1.5,
     });
 
     cropRectangle.on("scaling", (e: any) => {
@@ -196,7 +197,6 @@ export function CropContent() {
     if (!isCropMode) return;
 
     removeAllCropRectangles();
-
     setCropRect(null);
 
     if (selectedImage && originalProps) {
@@ -252,10 +252,7 @@ export function CropContent() {
       const cropX = Math.max(0, cropBounds.left - imageBounds.left);
       const cropY = Math.max(0, cropBounds.top - imageBounds.top);
       const cropWidth = Math.min(cropBounds.width, imageBounds.width - cropX);
-      const cropHeight = Math.min(
-        cropBounds.height,
-        imageBounds.height - cropY,
-      );
+      const cropHeight = Math.min(cropBounds.height, imageBounds.height - cropY);
 
       const imageScaleX = selectedImage.scaleX || 1;
       const imageScaleY = selectedImage.scaleY || 1;
@@ -288,11 +285,13 @@ export function CropContent() {
       canvasEditor.add(croppedImage);
       canvasEditor.setActiveObject(croppedImage);
       canvasEditor.requestRenderAll();
+      saveState();
 
       exitCropMode();
+      toast.success("Image cropped successfully");
     } catch (error) {
       console.error("Error applying crop:", error);
-      alert("Failed to apply crop. Please try again.");
+      toast.error("Failed to crop image. Please try again.");
       exitCropMode();
     }
   };
@@ -303,98 +302,120 @@ export function CropContent() {
 
   if (!canvasEditor) {
     return (
-      <div className="p-4">
-        <p className="text-sm text-muted-foreground">Canvas not ready</p>
+      <div className="py-4 text-center">
+        <p className="text-xs text-muted-foreground">Canvas not ready</p>
       </div>
     );
   }
 
   const activeImage = getActiveImage();
+
   if (!activeImage && !isCropMode) {
     return (
-      <div className="p-4">
-        <p className="text-sm text-muted-foreground">Select an image to crop</p>
+      <div className="flex flex-col items-center justify-center gap-2 py-4 text-center">
+        <div className="flex size-8 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+          <ImageIcon className="size-4" />
+        </div>
+        <p className="text-xs font-medium text-foreground">No image selected</p>
+        <p className="text-[11px] text-muted-foreground">
+          Click an image on the canvas to start cropping.
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-5">
-      {isCropMode && (
-        <div className="rounded-lg border border-border bg-muted/50 p-3">
-          <p className="text-sm font-medium text-foreground">Crop Mode Active</p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Adjust the blue rectangle to set crop area
-          </p>
-        </div>
-      )}
+    <div className="flex flex-col gap-3">
+      {/* Header status */}
+      <div className="flex items-center justify-between">
+        <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+          Crop Tool
+        </p>
+        {isCropMode ? (
+          <span className="flex items-center gap-1 text-[10px] font-semibold text-[#0d99ff]">
+            <span className="size-1.5 rounded-full bg-[#0d99ff] animate-pulse" />
+            Active
+          </span>
+        ) : (
+          <span className="text-[10px] text-muted-foreground">Ready</span>
+        )}
+      </div>
 
+      {/* Start Button if not in crop mode */}
       {!isCropMode && activeImage && (
         <Button
+          type="button"
           onClick={() => initializeCropMode(activeImage)}
-          className="w-full"
-          variant="default"
+          className="h-8 w-full gap-1.5 rounded-md bg-[#0d99ff] text-xs font-medium text-white shadow-none hover:bg-[#0d99ff]/90 cursor-pointer"
         >
-          <Crop className="mr-2 h-4 w-4" />
-          Start Cropping
+          <Crop className="size-3.5" />
+          Enter Crop Mode
         </Button>
       )}
 
+      {/* Crop Controls when active */}
       {isCropMode && (
-        <div>
-          <h3 className="mb-3 text-sm font-medium text-foreground">Crop Aspect Ratios</h3>
-          <div className="grid grid-cols-3 gap-2">
-            {ASPECT_RATIOS.map((ratio) => {
-              const IconComponent = ratio.icon;
-              return (
-                <button
-                  key={ratio.label}
-                  onClick={() => applyAspectRatio(ratio.value)}
-                  className={`cursor-pointer rounded-lg border p-3 text-center transition-colors ${
-                    selectedRatio === ratio.value
-                      ? "border-primary bg-primary/10 text-primary"
-                      : "border-border text-muted-foreground hover:border-foreground/30 hover:bg-muted/50"
-                  }`}
-                >
-                  <IconComponent className="mx-auto mb-2 h-6 w-6" />
-                  <div className="text-xs">{ratio.label}</div>
-                  {ratio.ratio && (
-                    <div className="text-xs text-muted-foreground">{ratio.ratio}</div>
-                  )}
-                </button>
-              );
-            })}
+        <>
+          {/* Aspect Ratios Section */}
+          <div className="space-y-1.5">
+            <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+              Aspect Ratio
+            </p>
+            <div className="grid grid-cols-3 gap-1.5">
+              {ASPECT_RATIOS.map((ratio) => {
+                const IconComponent = ratio.icon;
+                const isSelected = selectedRatio === ratio.value;
+                return (
+                  <button
+                    key={ratio.label}
+                    type="button"
+                    onClick={() => applyAspectRatio(ratio.value)}
+                    className={cn(
+                      "flex flex-col items-center justify-center gap-1 rounded-lg border p-2 text-center transition-all cursor-pointer select-none active:scale-95",
+                      isSelected
+                        ? "border-[#0d99ff] bg-[#0d99ff]/10 text-[#0d99ff] shadow-xs ring-1 ring-[#0d99ff]/30"
+                        : "border-border/60 text-muted-foreground hover:border-foreground/30 hover:bg-muted/40 hover:text-foreground",
+                    )}
+                  >
+                    <IconComponent className="size-3.5" />
+                    <span className="text-[11px] font-medium leading-none">
+                      {ratio.label}
+                    </span>
+                    <span className="text-[9px] opacity-70 tabular-nums">
+                      {ratio.ratio}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
-        </div>
+
+          {/* Action buttons */}
+          <div className="grid grid-cols-2 gap-2 pt-1">
+            <Button
+              type="button"
+              onClick={applyCrop}
+              className="h-8 gap-1.5 rounded-md bg-[#0d99ff] text-xs font-medium text-white shadow-none hover:bg-[#0d99ff]/90 cursor-pointer"
+            >
+              <CheckCheck className="size-3.5" />
+              Apply
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={cancelCrop}
+              className="h-8 gap-1.5 rounded-md border-border text-xs font-medium hover:bg-muted cursor-pointer"
+            >
+              <X className="size-3.5" />
+              Cancel
+            </Button>
+          </div>
+
+          <p className="text-center text-[10px] text-muted-foreground">
+            Drag the blue bounding box on canvas to position your crop.
+          </p>
+        </>
       )}
-
-      {isCropMode && (
-        <div className="space-y-3 border-t border-border pt-4">
-          <Button onClick={applyCrop} className="w-full" variant="default">
-            <CheckCheck className="mr-2 h-4 w-4" />
-            Apply Crop
-          </Button>
-
-          <Button onClick={cancelCrop} variant="outline" className="w-full">
-            <X className="mr-2 h-4 w-4" />
-            Cancel
-          </Button>
-        </div>
-      )}
-
-      <div className="rounded-lg border border-border bg-muted/50 p-3">
-        <p className="text-xs text-muted-foreground">
-          <strong className="text-foreground">How to crop:</strong>
-          <br />
-          1. Click "Start Cropping"
-          <br />
-          2. Drag the blue rectangle to select crop area
-          <br />
-          3. Choose aspect ratio (optional)
-          <br />
-          4. Click "Apply Crop" to finalize
-        </p>
-      </div>
     </div>
   );
 }

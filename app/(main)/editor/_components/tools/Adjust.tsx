@@ -1,7 +1,7 @@
 "use client";
 import fabric, { filters, Image as FabricImage } from "fabric";
 import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
+import { FluidSlider } from "@/components/motion/range-slider-fluid";
 import { useCanvas } from "@/context/context";
 import { FilterConfig } from "@/utils/types";
 import { RotateCcw, Sparkles, Skull, Mountain, Sunset, Snowflake, Flame, ImageOff } from "lucide-react";
@@ -290,25 +290,16 @@ const AdjustControl = () => {
         </div>
 
         {FILTER_CONFIGS.map((config) => (
-          <div key={config.key} className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <label className="text-[11px] text-muted-foreground">
-                {config.label}
-              </label>
-              <span className="text-[11px] tabular-nums text-muted-foreground">
-                {filterValues[config.key]}
-                {config.suffix || ""}
-              </span>
-            </div>
-            <Slider
-              value={[filterValues[config.key]]}
-              onValueChange={(value) => handleValueChange(config.key, value)}
-              min={config.min}
-              max={config.max}
-              step={config.step}
-              className="w-full"
-            />
-          </div>
+          <FluidSlider
+            key={config.key}
+            label={config.label}
+            value={filterValues[config.key]}
+            onValueChange={(value) => handleValueChange(config.key, value)}
+            min={config.min}
+            max={config.max}
+            step={config.step}
+            format={(val) => `${val}${config.suffix || ""}`}
+          />
         ))}
       </div>
 

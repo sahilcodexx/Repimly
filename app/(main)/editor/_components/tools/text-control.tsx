@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Slider } from "@/components/ui/slider";
+import { FluidSlider } from "@/components/motion/range-slider-fluid";
 import {
   Select,
   SelectContent,
@@ -224,20 +224,15 @@ export function TextControls() {
             </Select>
           </div>
 
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <label className="text-xs text-muted-foreground">Font Size</label>
-              <span className="text-xs tabular-nums text-muted-foreground">{fontSize}px</span>
-            </div>
-            <Slider
-              value={[fontSize]}
-              onValueChange={applyFontSize}
-              min={FONT_SIZES.min}
-              max={FONT_SIZES.max}
-              step={1}
-              className="w-full"
-            />
-          </div>
+          <FluidSlider
+            label="Font Size"
+            format={(v) => `${v}px`}
+            value={fontSize}
+            onValueChange={applyFontSize}
+            min={FONT_SIZES.min}
+            max={FONT_SIZES.max}
+            step={1}
+          />
 
           <div className="space-y-2">
             <label className="text-xs text-muted-foreground">Text Alignment</label>

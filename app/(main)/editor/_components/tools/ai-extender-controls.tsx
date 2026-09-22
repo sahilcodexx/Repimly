@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
+import { FluidSlider } from "@/components/motion/range-slider-fluid";
 import { ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Wand2 } from "lucide-react";
 import { useCanvas } from "@/context/context";
 import fabric, { FabricImage } from "fabric";
@@ -197,21 +197,16 @@ export function AIExtenderControls({ project }: { project: Project }) {
         </div>
       </div>
 
-      <div>
-        <div className="mb-2 flex items-center justify-between">
-          <label className="text-sm text-foreground">Extension Amount</label>
-          <span className="text-xs tabular-nums text-muted-foreground">{extensionAmount}px</span>
-        </div>
-        <Slider
-          value={[extensionAmount]}
-          onValueChange={([value]) => setExtensionAmount(value)}
-          min={50}
-          max={500}
-          step={25}
-          className="w-full"
-          disabled={!selectedDirection}
-        />
-      </div>
+      <FluidSlider
+        label="Extension Amount"
+        format={(value) => `${value}px`}
+        value={extensionAmount}
+        onValueChange={(value) => setExtensionAmount(value)}
+        min={50}
+        max={500}
+        step={25}
+        disabled={!selectedDirection}
+      />
 
       {selectedDirection && currentImage && (
         <div className="rounded-lg border border-border bg-muted/50 p-3">

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Slider } from "@/components/ui/slider";
+import { FluidSlider } from "@/components/motion/range-slider-fluid";
 import {
   Square,
   Circle,
@@ -224,41 +224,27 @@ export function ShapeControls() {
           </div>
         </div>
 
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between">
-            <label className="text-[11px] text-muted-foreground">Stroke width</label>
-            <span className="text-[11px] tabular-nums text-muted-foreground">
-              {strokeWidth}px
-            </span>
-          </div>
-          <Slider
-            value={[strokeWidth]}
-            onValueChange={([v]) => setStrokeWidth(v)}
-            min={0}
-            max={20}
-            step={1}
-            className="w-full"
-          />
-        </div>
+        <FluidSlider
+          label="Stroke width"
+          format={(v) => `${v}px`}
+          value={strokeWidth}
+          onValueChange={(v) => setStrokeWidth(v)}
+          min={0}
+          max={20}
+          step={1}
+        />
       </div>
 
       {shapeType === "rect" && (
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between">
-            <label className="text-[11px] text-muted-foreground">Corner radius</label>
-            <span className="text-[11px] tabular-nums text-muted-foreground">
-              {cornerRadius}px
-            </span>
-          </div>
-          <Slider
-            value={[cornerRadius]}
-            onValueChange={([v]) => setCornerRadius(v)}
-            min={0}
-            max={40}
-            step={1}
-            className="w-full"
-          />
-        </div>
+        <FluidSlider
+          label="Corner radius"
+          format={(v) => `${v}px`}
+          value={cornerRadius}
+          onValueChange={(v) => setCornerRadius(v)}
+          min={0}
+          max={40}
+          step={1}
+        />
       )}
 
       <Button
