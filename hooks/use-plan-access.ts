@@ -6,6 +6,7 @@ type planAccess = {
   text: true;
   layers: true;
   shapes: true;
+  canvas: true;
   background: false;
   ai_extender: false;
   ai_edit: false;
@@ -25,6 +26,7 @@ export function usePlanAccess() {
     text: true,
     layers: true,
     shapes: true,
+    canvas: true,
 
     //this is pro tool access
     background: isPro,
